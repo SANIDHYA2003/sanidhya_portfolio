@@ -1,6 +1,7 @@
 import React, { useEffect, useContext } from "react";
 import { ThemeContext } from "../context/themecontext";
 import { Typewriter } from "react-simple-typewriter";
+import Game from "../components/Game";
 
 function Home() {
   const { Theme, themeToggleButton } = useContext(ThemeContext);
@@ -28,7 +29,7 @@ function Home() {
               "Cybersecurity Explorer 🔐",
               "Your Next Teammate 🚀",
             ]}
-            loop={0} // 0 = infinite
+            loop={0}
             cursor
             cursorStyle="|"
             typeSpeed={70}
@@ -41,6 +42,9 @@ function Home() {
           {Theme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode"}
         </button>
       </div>
+
+      {/* 🎮 Mini Game */}
+      <Game />
     </div>
   );
 }
