@@ -9,21 +9,177 @@ class BattleScene extends Phaser.Scene {
     this.remainingTime = gameDuration;
   }
 
-  create() {
-    // Game State
-    this.isPaused = false;
+  preload() {
+    // ===== PLAYER (knight) — individual frames =====
+    for (let i = 1; i <= 10; i++) this.load.image(`idle${i}`, `game_asset/png/Idle_${i}.png`);
+    for (let i = 1; i <= 8; i++) this.load.image(`run${i}`, `game_asset/png/Run_${i}.png`);
+    for (let i = 1; i <= 8; i++) this.load.image(`attack${i}`, `game_asset/png/Melee_${i}.png`);
+    for (let i = 1; i <= 10; i++) this.load.image(`dead${i}`, `game_asset/png/Dead_${i}.png`);
 
-    // Groups
+    // ===== ENEMY (robot) — sprite sheets =====
+    this.load.spritesheet("robot_idle", "game_asset/robot_melee/Idle.png", {
+  frameWidth: 96,
+  frameHeight: 96,
+    });
+    this.load.spritesheet("robot_walk", "game_asset/robot_melee/Walk.png", {
+  frameWidth: 96,
+  frameHeight: 96,
+    });
+    this.load.spritesheet("robot_attack", "game_asset/robot_melee/Attack3.png", {
+  frameWidth: 96,
+  frameHeight: 96,
+    });
+    this.load.spritesheet("robot_death", "game_asset/robot_melee/Death.png", {
+  frameWidth: 96,
+  frameHeight: 96,
+    });
+    this.load.spritesheet("robot_hurt", "game_asset/robot_melee/Hurt.png", {
+  frameWidth: 96,
+  frameHeight: 96,
+    });
+  }
+
+  // ---- helpers ----
+  hasAnim(key) {
+    const anim = this.anims.get(key);
+    return !!(anim && anim.frames && anim.frames.length > 0);
+  }
+
+  // map "idle/run/attack/dead" => side-specific anim keys
+  animKey(unit, action) {
+    const side = unit?.side === "enemy" ? "r" : "p";
+    if (side === "p") {
+      if (action === "idle") return "p_idle";
+      if (action === "run") return "p_run";
+      if (action === "attack") return "p_attack";
+      if (action === "dead") return "p_dead";
+    } else {
+      if (action === "idle") return "r_idle";
+      if (action === "run") return "r_walk";
+      if (action === "attack") return "r_attack";
+      if (action === "dead") return "r_dead";
+    }
+    return null;
+  }
+
+  firstFrameKeyFor(key) {
+    // Only used if an animation is missing; give a safe still-frame fallback
+    if (["p_idle", "p_run", "p_attack", "p_dead"].includes(key)) {
+      if (key === "p_idle") return "idle1";
+      if (key === "p_run") return "run1";
+      if (key === "p_attack") return "attack1";
+      if (key === "p_dead") return "dead1";
+    }
+    // robots always use sheets, so no static key fallback here
+    return null;
+  }
+
+  safePlay(sprite, key, ignoreIfPlaying = false) {
+    if (!sprite || !sprite.active) return;
+    if (this.hasAnim(key)) {
+      sprite.anims?.play(key, ignoreIfPlaying);
+    } else {
+      const fallback = this.firstFrameKeyFor(key);
+      if (fallback && this.textures.exists(fallback)) sprite.setTexture(fallback);
+    }
+  }
+
+  verifyAssets() {
+    const mustHave = [
+      ...Array.from({ length: 10 }, (_, i) => `idle${i + 1}`),
+      ...Array.from({ length: 8 }, (_, i) => `run${i + 1}`),
+      ...Array.from({ length: 8 }, (_, i) => `attack${i + 1}`),
+      ...Array.from({ length: 10 }, (_, i) => `dead${i + 1}`),
+    ];
+    const missing = mustHave.filter((k) => !this.textures.exists(k));
+    if (missing.length) console.warn("[assets] Missing player textures:", missing);
+  }
+
+  die(unit) {
+    if (!unit || !unit.active) return;
+    const k = this.animKey(unit, "dead");
+    if (this.hasAnim(k)) {
+      this.safePlay(unit, k);
+      unit.once("animationcomplete", () => unit.destroy());
+    } else {
+      this.time.delayedCall(120, () => unit.destroy());
+    }
+    if (unit.healthBar) unit.healthBar.destroy();
+  }
+
+  create() {
+    // Verify knight frames loaded
+    this.verifyAssets();
+
+    // ===== PLAYER ANIMS (built from individual images) =====
+    this.anims.create({
+      key: "p_idle",
+      frames: Array.from({ length: 10 }, (_, i) => ({ key: `idle${i + 1}` })),
+      frameRate: 6,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "p_run",
+      frames: Array.from({ length: 8 }, (_, i) => ({ key: `run${i + 1}` })),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "p_attack",
+      frames: Array.from({ length: 8 }, (_, i) => ({ key: `attack${i + 1}` })),
+      frameRate: 12,
+      repeat: 0,
+    });
+    this.anims.create({
+      key: "p_dead",
+      frames: Array.from({ length: 10 }, (_, i) => ({ key: `dead${i + 1}` })),
+      frameRate: 10,
+      repeat: 0,
+    });
+
+    // ===== ROBOT ANIMS (from sheets) =====
+    this.anims.create({
+      key: "r_idle",
+      frames: this.anims.generateFrameNumbers("robot_idle", { start: 0, end: 3 }),
+      frameRate: 6,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "r_walk",
+      frames: this.anims.generateFrameNumbers("robot_walk", { start: 0, end: 5 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "r_attack",
+      frames: this.anims.generateFrameNumbers("robot_attack", { start: 0, end: 5 }),
+      frameRate: 12,
+      repeat: 0,
+    });
+    this.anims.create({
+      key: "r_dead",
+      frames: this.anims.generateFrameNumbers("robot_death", { start: 0, end: 5 }),
+      frameRate: 10,
+      repeat: 0,
+    });
+    this.anims.create({
+      key: "r_hurt",
+      frames: this.anims.generateFrameNumbers("robot_hurt", { start: 0, end: 1 }),
+      frameRate: 8,
+      repeat: 0,
+    });
+
+    // ===== GAME STATE =====
+    this.isPaused = false;
     this.players = this.physics.add.group();
     this.enemies = this.physics.add.group();
     this.projectiles = this.physics.add.group();
     this.drops = this.physics.add.group();
 
-    // Economy + default avatar
     this.coins = 15;
     this.spawnType = "fullstack";
 
-    // Battlefield boundaries
+    // Battlefield
     this.boundary = new Phaser.Geom.Rectangle(100, 100, 600, 400);
     this.createBackground();
     this.drawBattleBoundary();
@@ -67,20 +223,11 @@ class BattleScene extends Phaser.Scene {
     this.playerBaseShielded = false;
     this.playerShieldGraphic = null;
 
-    // Mouse input
+    // Input
     this.input.on("pointerdown", (pointer) => {
       if (this.isPaused) return;
       if (this.tryPickDrop(pointer)) return;
-      if (this.boundary.contains(pointer.x, pointer.y)) {
-        this.trySpawn(pointer.y);
-      }
-    });
-
-    // Enemy spawn loop
-    this.time.addEvent({
-      delay: 1500,
-      loop: true,
-      callback: () => this.spawnEnemy(),
+      if (this.boundary.contains(pointer.x, pointer.y)) this.trySpawn(pointer.y);
     });
 
     // Colliders
@@ -89,16 +236,24 @@ class BattleScene extends Phaser.Scene {
     this.physics.add.collider(this.players, this.enemyBase, (a, b) => this.handleBaseAttack(a, b), null, this);
     this.physics.add.overlap(this.projectiles, this.enemies, (proj, enemy) => this.handleProjectileHit(proj, enemy), null, this);
 
-    // Timer update event
+    // Timer
     this.timerEvent = this.time.addEvent({
       delay: 1000,
       callback: this.updateTimer,
       callbackScope: this,
       loop: true,
     });
+
+    // Enemy spawns
+    this.time.delayedCall(500, () => {
+      this.time.addEvent({
+        delay: 1500,
+        loop: true,
+        callback: () => this.spawnEnemy(),
+      });
+    });
   }
 
-  // --- Background + boundary ---
   createBackground() {
     const g = this.add.graphics();
     g.lineStyle(1, 0x222222);
@@ -112,7 +267,6 @@ class BattleScene extends Phaser.Scene {
     g.strokeRectShape(this.boundary);
   }
 
-  // --- Avatar UI ---
   createAvatarButtons() {
     const avatars = [
       { type: "fullstack", label: "Fullstack (5c)", x: 150 },
@@ -144,7 +298,6 @@ class BattleScene extends Phaser.Scene {
     this.highlightSelected(type);
   }
 
-  // --- Player spawn ---
   trySpawn(y) {
     const costs = { fullstack: 5, cybersec: 15, aiml: 30 };
     if (this.coins < costs[this.spawnType]) return;
@@ -154,13 +307,17 @@ class BattleScene extends Phaser.Scene {
   }
 
   spawnPlayer(y, type) {
-    let color = 0x00ffff, hp = 12, atk = 2, speed = 140;
-    if (type === "cybersec") { color = 0x00ff00; hp = 18; atk = 3; speed = 120; }
-    if (type === "aiml") { color = 0xff88ff; hp = 14; atk = 2; speed = 150; }
+    let hp = 12, atk = 2, speed = 140;
+    if (type === "cybersec") { hp = 18; atk = 3; speed = 120; }
+    if (type === "aiml") { hp = 14; atk = 2; speed = 150; }
 
-    const unit = this.add.circle(this.boundary.left + 30, y, 15, color);
+    const unit = this.add.sprite(this.boundary.left + 30, y, "idle1").setScale(0.1);
     this.physics.add.existing(unit);
-    unit.body.setCollideWorldBounds(true).setBounce(0).setImmovable(false).setCircle(15);
+    unit.setFlipX(true);
+
+    this.safePlay(unit, "p_run");
+
+    unit.body.setCollideWorldBounds(true).setBounce(0).setImmovable(false);
     unit.body.onWorldBounds = true;
 
     unit.side = "player"; unit.type = type;
@@ -169,17 +326,6 @@ class BattleScene extends Phaser.Scene {
     unit.healthBar = this.add.graphics();
     this.updateHealthBar(unit);
     this.players.add(unit);
-    
-    // Breathing animation
-    this.tweens.add({
-      targets: unit,
-      scaleX: 1.1,
-      scaleY: 1.1,
-      duration: 700,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut'
-    });
 
     if (type === "cybersec") this.createPlayerFirewall(5000);
     if (type === "aiml") {
@@ -206,14 +352,6 @@ class BattleScene extends Phaser.Scene {
     else {
       this.playerShieldGraphic = this.add.rectangle(this.playerBase.x + 30, 300, 30, 180, 0x00ff88, 0.25);
       this.playerBaseShielded = true;
-      // Shield animation
-      this.tweens.add({
-          targets: this.playerShieldGraphic,
-          alpha: 0.7,
-          duration: 500,
-          yoyo: true,
-          repeat: -1
-      });
     }
     this.playerBaseShieldTimer = this.time.delayedCall(durationMs, () => {
       this.playerBaseShielded = false;
@@ -223,7 +361,6 @@ class BattleScene extends Phaser.Scene {
     });
   }
 
-  // --- Enemy spawn ---
   spawnEnemy() {
     const y = Phaser.Math.Between(this.boundary.top + 40, this.boundary.bottom - 40);
     const roll = Phaser.Math.Between(1, 100);
@@ -231,12 +368,16 @@ class BattleScene extends Phaser.Scene {
     if (roll > 70 && roll <= 90) type = "medium";
     else if (roll > 90) type = "strong";
 
-    let color = 0xff4444, hp = 10, atk = 1, speed = 120, size=15;
-    if (type === "medium") { color = 0xffaa00; hp = 16; atk = 2; speed = 110; size=18; }
-    if (type === "strong") { color = 0xaa00ff; hp = 20; atk = 3; speed = 130; size=22; }
+    let hp = 10, atk = 1, speed = 120;
+    if (type === "medium") { hp = 16; atk = 2; speed = 110; }
+    if (type === "strong") { hp = 20; atk = 3; speed = 130; }
 
-    const unit = this.add.rectangle(this.boundary.right - 30, y, size, size, color);
+    // start with a robot sheet texture; animation will swap immediately
+    const unit = this.add.sprite(this.boundary.right - 30, y, "robot_idle", 0).setScale(0.9);
     this.physics.add.existing(unit);
+
+    this.safePlay(unit, "r_walk");
+
     unit.body.setCollideWorldBounds(true).setBounce(0).setImmovable(false);
     unit.body.onWorldBounds = true;
 
@@ -246,17 +387,6 @@ class BattleScene extends Phaser.Scene {
     unit.healthBar = this.add.graphics();
     this.updateHealthBar(unit);
     this.enemies.add(unit);
-
-    // Wobble animation
-    this.tweens.add({
-        targets: unit,
-        angle: 10,
-        duration: 200,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut'
-    });
-
 
     if (type === "strong") {
       unit.aiPulseTimer = this.time.addEvent({
@@ -279,7 +409,6 @@ class BattleScene extends Phaser.Scene {
     this.physics.moveToObject(unit, this.playerBase, unit.speed);
   }
 
-  // --- Drops ---
   spawnDrop(x, y) {
     if (!this.boundary.contains(x, y)) return;
     const drop = this.add.rectangle(x, y, 20, 20, 0xffff00);
@@ -287,15 +416,6 @@ class BattleScene extends Phaser.Scene {
     drop.setInteractive();
     drop.isCertificate = true;
     this.drops.add(drop);
-    // Drop animation
-    this.tweens.add({
-        targets: drop,
-        y: y - 10,
-        duration: 500,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut'
-    });
     this.time.delayedCall(5000, () => { if (drop.active) drop.destroy(); });
   }
 
@@ -314,15 +434,8 @@ class BattleScene extends Phaser.Scene {
   }
 
   bombEnemies(x, y) {
-    const explosion = this.add.circle(x, y, 10, 0xff0000, 0.5);
-    // Explosion animation
-    this.tweens.add({
-        targets: explosion,
-        radius: 80,
-        alpha: 0,
-        duration: 300,
-        onComplete: () => explosion.destroy()
-    });
+    const explosion = this.add.circle(x, y, 40, 0xff0000, 0.5);
+    this.time.delayedCall(300, () => explosion.destroy());
     this.enemies.getChildren().forEach((enemy) => {
       if (!enemy.active) return;
       const dist = Phaser.Math.Distance.Between(x, y, enemy.x, enemy.y);
@@ -330,12 +443,13 @@ class BattleScene extends Phaser.Scene {
         enemy.hp -= 8;
         if (enemy.hp <= 0) {
           if (Phaser.Math.Between(1, 100) <= 30) this.spawnDrop(enemy.x, enemy.y);
-          this.unitDeathEffect(enemy);
+          this.die(enemy);
+          this.coins += 3; this.updateCoinText();
         }
       }
     });
   }
-  
+
   updateTimer() {
     this.remainingTime--;
     this.gameTimerText.setText(`Time: ${Math.max(0, this.remainingTime)}`);
@@ -345,13 +459,11 @@ class BattleScene extends Phaser.Scene {
     }
   }
 
-  // --- Update ---
   update() {
     if (this.isPaused) return;
 
     const clampUnit = (u) => {
       if (!u.active) return;
-      // Laser boundary damage
       const laserDamage = 0.05;
       if (
         u.x <= this.boundary.left + 20 ||
@@ -360,9 +472,7 @@ class BattleScene extends Phaser.Scene {
         u.y >= this.boundary.bottom - 20
       ) {
         u.hp -= laserDamage;
-        if (u.hp <= 0) {
-            this.unitDeathEffect(u);
-        }
+        if (u.hp <= 0) this.die(u);
       }
 
       u.x = Phaser.Math.Clamp(u.x, this.boundary.left + 20, this.boundary.right - 20);
@@ -371,8 +481,10 @@ class BattleScene extends Phaser.Scene {
 
     this.players.getChildren().forEach((u) => {
       if (!u.active) return;
-      if (u.fighting) u.body.setVelocity(0, 0);
-      else {
+      if (u.fighting) {
+        u.body.setVelocity(0, 0);
+      } else {
+        this.safePlay(u, this.animKey(u, "run"), true);
         const t = this.findPriorityEnemyFor(u);
         if (t) this.physics.moveToObject(u, t, u.speed);
         else this.physics.moveToObject(u, this.enemyBase, u.speed);
@@ -383,8 +495,10 @@ class BattleScene extends Phaser.Scene {
 
     this.enemies.getChildren().forEach((u) => {
       if (!u.active) return;
-      if (u.fighting) u.body.setVelocity(0, 0);
-      else {
+      if (u.fighting) {
+        u.body.setVelocity(0, 0);
+      } else {
+        this.safePlay(u, this.animKey(u, "run"), true);
         const t = this.findPriorityPlayerFor(u);
         if (t) this.physics.moveToObject(u, t, u.speed);
         else this.physics.moveToObject(u, this.playerBase, u.speed);
@@ -397,15 +511,14 @@ class BattleScene extends Phaser.Scene {
   updateHealthBar(unit) {
     if (!unit.healthBar || !unit.active) return;
     unit.healthBar.clear();
-    const w = 30, h = 4, x = unit.x - w / 2, y = unit.y - 25;
+    const w = 40, h = 5, x = unit.x - w / 2, y = unit.y - 30;
     const pct = Math.max(unit.hp / unit.maxHp, 0);
     unit.healthBar.fillStyle(0x222222).fillRect(x, y, w, h);
     unit.healthBar.fillStyle(0x00ff00).fillRect(x, y, w * pct, h);
   }
 
-  // --- Helpers ---
   findPriorityEnemyFor(playerUnit) {
-    const enemies = this.enemies.getChildren().filter(e => e.active);
+    const enemies = this.enemies.getChildren().filter((e) => e.active);
     if (!enemies.length) return null;
     return enemies.reduce((a, b) =>
       Phaser.Math.Distance.Between(playerUnit.x, playerUnit.y, a.x, a.y) <
@@ -414,33 +527,15 @@ class BattleScene extends Phaser.Scene {
   }
 
   findPriorityPlayerFor(enemyUnit) {
-    const players = this.players.getChildren().filter(p => p.active);
+    const players = this.players.getChildren().filter((p) => p.active);
     if (!players.length) return null;
     return players.reduce((a, b) =>
       Phaser.Math.Distance.Between(enemyUnit.x, enemyUnit.y, a.x, a.y) <
       Phaser.Math.Distance.Between(enemyUnit.x, enemyUnit.y, b.x, b.y) ? a : b
     );
   }
-  
-  unitDeathEffect(unit) {
-    if (!unit.active) return;
-    // Particle explosion
-    for(let i = 0; i < 10; i++) {
-        const particle = this.add.circle(unit.x, unit.y, Phaser.Math.Between(2,5), unit.fillColor);
-        this.physics.add.existing(particle);
-        particle.body.setVelocity(Phaser.Math.Between(-200, 200), Phaser.Math.Between(-200, 200));
-        this.tweens.add({
-            targets: particle,
-            alpha: 0,
-            duration: 500,
-            onComplete: () => particle.destroy()
-        });
-    }
-    unit.healthBar?.destroy(); 
-    unit.destroy();
-  }
 
-  // --- Fight + Base logic ---
+  // ====== COMBAT ======
   handleFight(a, b) {
     let player = a.side === "player" ? a : b.side === "player" ? b : null;
     let enemy = a.side === "enemy" ? a : b.side === "enemy" ? b : null;
@@ -449,8 +544,11 @@ class BattleScene extends Phaser.Scene {
     player.fighting = true; enemy.fighting = true;
     player.body.setVelocity(0, 0); enemy.body.setVelocity(0, 0);
 
+    this.safePlay(player, this.animKey(player, "attack"), true);
+    this.safePlay(enemy, this.animKey(enemy, "attack"), true);
+
     const fightTick = this.time.addEvent({
-      delay: 400,
+      delay: 800,
       loop: true,
       callback: () => {
         if (!player.active || !enemy.active) {
@@ -467,23 +565,22 @@ class BattleScene extends Phaser.Scene {
           fightTick.remove(false);
           return;
         }
-        
-        // Attack animation
-        this.tweens.add({ targets: player, scaleX: 1.3, scaleY: 1.3, duration: 100, yoyo: true });
-        this.tweens.add({ targets: enemy, angle: enemy.angle + 20, duration: 100, yoyo: true });
+
+        this.safePlay(player, this.animKey(player, "attack"));
+        this.safePlay(enemy, this.animKey(enemy, "attack"));
 
         player.hp -= enemy.attack;
         enemy.hp -= player.attack;
 
         if (enemy.hp <= 0) {
           if (Phaser.Math.Between(1, 100) <= 30) this.spawnDrop(enemy.x, enemy.y);
-          this.unitDeathEffect(enemy);
+          this.die(enemy);
           this.coins += 3; this.updateCoinText();
           player.fighting = false;
           fightTick.remove(false);
         }
         if (player.hp <= 0) {
-          this.unitDeathEffect(player);
+          this.die(player);
           enemy.fighting = false;
           fightTick.remove(false);
         }
@@ -498,42 +595,38 @@ class BattleScene extends Phaser.Scene {
 
     unit.fighting = true; unit.attackingBase = true;
     unit.body.setVelocity(0, 0);
+    this.safePlay(unit, this.animKey(unit, "attack"), true);
 
     const tick = this.time.addEvent({
-      delay: 500,
+      delay: 800,
       loop: true,
       callback: () => {
         if (!unit.active) { tick.remove(false); return; }
-        // Base attack animation
-        const isPlayerBase = base === this.playerBase;
-        const hitEffect = this.add.circle(
-            isPlayerBase ? base.x + 20 : base.x - 20, 
-            unit.y, 10, 
-            isPlayerBase ? 0xff0000 : 0x00ffff
-        );
-        this.tweens.add({targets: hitEffect, alpha: 0, duration: 200, onComplete: () => hitEffect.destroy()});
 
-        if (isPlayerBase) {
+        this.safePlay(unit, this.animKey(unit, "attack"), true);
+
+        if (base === this.playerBase) {
           const dmg = unit.attack * (this.playerBaseShielded ? 0.5 : 1);
           this.playerBaseHP -= dmg;
-          this.playerBaseText.setText("Job HP: " + Math.ceil(Math.max(this.playerBaseHP, 0)));
+          this.playerBaseText.setText("Job HP: " + Math.max(0, Math.ceil(this.playerBaseHP)));
           if (this.playerBaseHP <= 0) this.endGame("AI Wins! You're outsourced!");
         } else {
           this.enemyBaseHP -= unit.attack;
-          this.enemyBaseText.setText("AI HP: " + Math.ceil(Math.max(this.enemyBaseHP, 0)));
+          this.enemyBaseText.setText("AI HP: " + Math.max(0, Math.ceil(this.enemyBaseHP)));
           if (this.enemyBaseHP <= 0) this.endGame("You Win! The Job is safe!");
         }
       },
     });
   }
 
+  // ===== projectiles =====
   handleProjectileHit(proj, enemy) {
     if (!proj.active || !enemy.active) return;
     enemy.hp -= proj.attack ?? 6;
     proj.destroy();
     if (enemy.hp <= 0) {
       if (Phaser.Math.Between(1, 100) <= 30) this.spawnDrop(enemy.x, enemy.y);
-      this.unitDeathEffect(enemy);
+      this.die(enemy);
       this.coins += 3; this.updateCoinText();
     }
   }
@@ -544,16 +637,13 @@ class BattleScene extends Phaser.Scene {
 
   handleGameEnd() {
     let message = "Time's up! It's a draw.";
-    if (this.playerBaseHP > this.enemyBaseHP) {
-      message = "You Win! The Job is safe!";
-    } else if (this.enemyBaseHP > this.playerBaseHP) {
-      message = "AI Wins! You're outsourced!";
-    }
+    if (this.playerBaseHP > this.enemyBaseHP) message = "You Win! The Job is safe!";
+    else if (this.enemyBaseHP > this.playerBaseHP) message = "AI Wins! You're outsourced!";
     this.endGame(message);
   }
 
   endGame(msg) {
-    if(this.isPaused) return;
+    if (this.isPaused) return;
     this.isPaused = true;
     this.physics.pause();
     this.time.removeAllEvents();
@@ -573,30 +663,35 @@ export default function Game() {
   };
 
   const quitGame = () => {
-    if (phaserGame.current) {
-        phaserGame.current.destroy(true);
-        phaserGame.current = null;
+    if (phaserGame.current?.scene?.scenes[0]?.isPaused) {
+      phaserGame.current.scene.resume("BattleScene");
     }
+    phaserGame.current?.destroy(true);
+    phaserGame.current = null;
     setIsGameRunning(false);
     setGameMessage(null);
   };
 
   useEffect(() => {
     if (isGameRunning && !phaserGame.current) {
-       class GameScene extends BattleScene {
+      class GameScene extends BattleScene {
         constructor() {
           super(setGameMessage, gameDuration);
         }
       }
-      
+
       const config = {
         type: Phaser.AUTO,
         width: 800,
         height: 600,
         backgroundColor: "#111133",
-        physics: { default: "arcade", arcade: { gravity: { y: 0 }, debug: false } },
+        physics: {
+          default: "arcade",
+          arcade: { gravity: { y: 0 }, debug: false }
+        },
         scene: GameScene,
         parent: "phaser-container",
+        pixelArt: true
       };
       phaserGame.current = new Phaser.Game(config);
     }
@@ -604,15 +699,20 @@ export default function Game() {
     return () => {
       if (phaserGame.current) {
         phaserGame.current.destroy(true);
+        phaserGame.current = null;
       }
     };
   }, [isGameRunning, gameDuration]);
-  
+
   const durations = [20, 40, 60, 120];
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4">
-      <div id="phaser-container" className="relative w-full max-w-4xl rounded-lg shadow-lg overflow-hidden border-4 border-cyan-400" style={{width: '800px', height: '600px'}}>
+      <div
+        id="phaser-container"
+        className="relative w-full max-w-4xl rounded-lg shadow-lg overflow-hidden border-4 border-cyan-400"
+        style={{ width: "800px", height: "600px" }}
+      >
         {!isGameRunning && !gameMessage && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black bg-opacity-70">
             <div className="text-center p-4">
@@ -669,4 +769,3 @@ export default function Game() {
     </div>
   );
 }
-// SECOND ANMATED FINALIZED
