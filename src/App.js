@@ -12,7 +12,7 @@ import Badges from "./components/Badges";
 import { useState, useEffect } from "react"
 function App() {
   const [activeSection, setActiveSection] = useState("home")
-  const [isPlaying, setIsPlaying] = useState(false)
+
   const [scrollProgress, setScrollProgress] = useState(0)
 
   const navItems = [
@@ -98,13 +98,7 @@ function App() {
           ))}
         </nav>
 
-        <button
-          className="music-toggle"
-          onClick={() => setIsPlaying(!isPlaying)}
-          title={isPlaying ? "Pause Music" : "Play Music"}
-        >
-          {isPlaying ? "⏸️" : "▶️"}
-        </button>
+        
 
         <div id="home" className="section-wrapper">
           <Home />

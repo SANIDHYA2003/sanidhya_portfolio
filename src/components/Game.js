@@ -12,6 +12,27 @@ class BattleScene extends Phaser.Scene {
 
   preload() {
 
+    //certificate
+
+    this.load.image("certificate", "game_asset/png/certificate.png");
+
+
+for (let i = 1; i <= 6; i++) {
+  this.load.image(`laser${i}`, "game_asset/firewall/firewall/laser" + i + ".png");
+}
+
+
+    // Player base castles
+    this.load.image("playercamp1", "game_asset/castle/playercamp1.png");
+    this.load.image("playercamp2", "game_asset/castle/playercamp2.png");
+    this.load.image("playercamp3", "game_asset/castle/playercamp3.png");
+
+    // AI base castles
+    this.load.image("aicamp1", "game_asset/castle/aicamp1.png");
+    this.load.image("aicamp2", "game_asset/castle/aicamp2.png");
+    this.load.image("aicamp3", "game_asset/castle/aicamp3.png");
+    //background stage
+
     this.load.image("bg1", "game_asset/battlegrounds/1/1.png");
     this.load.image("bg2", "game_asset/battlegrounds/1/2.png");
     this.load.image("bg3", "game_asset/battlegrounds/1/3.png");
@@ -173,19 +194,36 @@ class BattleScene extends Phaser.Scene {
     if (missing.length) console.warn("[assets] Missing player textures:", missing);
   }
 
-  die(unit) {
-    if (!unit || !unit.active) return;
-    const k = this.animKey(unit, "dead");
-    if (this.hasAnim(k)) {
-      this.safePlay(unit, k);
-      unit.once("animationcomplete", () => unit.destroy());
-    } else {
-      this.time.delayedCall(120, () => unit.destroy());
-    }
+die(unit, instant = false) {
+  if (!unit || !unit.active) return;
+
+  if (instant) {
+    unit.destroy();              // 💀 immediately gone
     if (unit.healthBar) unit.healthBar.destroy();
+    return;
   }
 
+  const k = this.animKey(unit, "dead");
+  if (this.hasAnim(k)) {
+    this.safePlay(unit, k);
+    unit.once("animationcomplete", () => unit.destroy());
+  } else {
+    this.time.delayedCall(120, () => unit.destroy());
+  }
+  if (unit.healthBar) unit.healthBar.destroy();
+}
+
+
   create() {
+
+//laser
+    this.anims.create({
+  key: "firewall_anim",
+  frames: Array.from({ length: 6 }, (_, i) => ({ key: `laser${i + 1}` })),
+  frameRate: 10,   // speed of animation
+  repeat: -1       // loop forever
+});
+
     // ===== BACKGROUND =====
     this.bg1 = this.add.image(0, 0, "bg1").setOrigin(0, 0).setScrollFactor(0.1);
     this.bg2 = this.add.image(0, 0, "bg2").setOrigin(0, 0).setScrollFactor(0.3);
@@ -342,49 +380,52 @@ class BattleScene extends Phaser.Scene {
     this.spawnType = "fullstack";
 
     // Battlefield
-this.boundary = new Phaser.Geom.Rectangle(
-  50, // left margin
-  50, // top margin
-  this.sys.game.config.width - 100,  // width with side margins
-  this.sys.game.config.height - 150 // height with top/bottom margins
-);
+    this.boundary = new Phaser.Geom.Rectangle(
+      50, // left margin
+      50, // top margin
+      this.sys.game.config.width - 100,  // width with side margins
+      this.sys.game.config.height - 150 // height with top/bottom margins
+    );
     this.createBackground();
     this.drawBattleBoundary();
 
     // Bases
-// Bases (stick to edges of arena)
+    // Bases (stick to edges of arena)
+// === PLAYER BASE ===
 this.playerBaseHP = 100;
-this.playerBase = this.add.rectangle(
-  this.boundary.left + 40,
+this.playerBase = this.add.sprite(
+  this.boundary.left -70,
   this.boundary.centerY,
-  40, 160,
-  0x00aa00
-);
+  "playercamp1"
+).setScale(0.3).setFlipX(true);
 this.physics.add.existing(this.playerBase, true);
+this.playerBase.setData("stage", 1);
 
+// === ENEMY BASE ===
 this.enemyBaseHP = 100;
-this.enemyBase = this.add.rectangle(
-  this.boundary.right - 40,
+this.enemyBase = this.add.sprite(
+  this.boundary.right +40,
   this.boundary.centerY,
-  40, 160,
-  0xaa0000
-);
+  "aicamp1"
+).setScale(0.3);
 this.physics.add.existing(this.enemyBase, true);
+this.enemyBase.setData("stage", 1);
 
-// HP Labels (align with arena edges too)
-this.playerBaseText = this.add.text(
-  this.boundary.left + 20,
-  this.boundary.top + 10,
-  "Job HP: 100",
-  { fontSize: "18px", fill: "#fff", backgroundColor: "#000" }
-);
 
-this.enemyBaseText = this.add.text(
-  this.boundary.right - 120,
-  this.boundary.top + 10,
-  "AI HP: 100",
-  { fontSize: "18px", fill: "#fff", backgroundColor: "#000" }
-);
+    // HP Labels (align with arena edges too)
+    this.playerBaseText = this.add.text(
+      this.boundary.left + 20,
+      this.boundary.top + 10,
+      "Job HP: 100",
+      { fontSize: "18px", fill: "#fff", backgroundColor: "#000" }
+    );
+
+    this.enemyBaseText = this.add.text(
+      this.boundary.right - 120,
+      this.boundary.top + 10,
+      "AI HP: 100",
+      { fontSize: "18px", fill: "#fff", backgroundColor: "#000" }
+    );
 
 
     this.coinText = this.add.text(340, 20, `Coins: ${this.coins}`, {
@@ -429,17 +470,21 @@ this.enemyBaseText = this.add.text(
     // Enemy spawns
     this.time.delayedCall(500, () => {
       this.time.addEvent({
-        delay: 1500,
+        delay: 2000,
         loop: true,
         callback: () => {
           // Pick a random enemy type
           const enemyTypes = ["weak", "medium", "strong"];
           const type = Phaser.Utils.Array.GetRandom(enemyTypes);
 
-          // Pick a random y inside the battlefield
-          const y = Phaser.Math.Between(this.boundary.top + 40, this.boundary.bottom - 40);
+  // ✅ Restrict spawn near enemy castle door
+      const baseX = this.enemyBase.x - 50; // spawn slightly in front of castle
+      const baseY = this.enemyBase.y;
+      const spawnRangeY = 40;  // restrict vertical spread
 
-          this.spawnEnemy(y, type);
+      const y = Phaser.Math.Between(baseY - spawnRangeY, baseY + spawnRangeY);
+
+          this.spawnEnemy(y, type , baseX);
         },
       });
     });
@@ -508,21 +553,32 @@ this.enemyBaseText = this.add.text(
     this.highlightSelected(type);
   }
 
-  trySpawn(y) {
-    const costs = { fullstack: 5, cybersec: 15, cyborg: 10 };
-    if (this.coins < costs[this.spawnType]) return;
-    this.coins -= costs[this.spawnType];
-    this.updateCoinText();
-    this.spawnPlayer(Phaser.Math.Clamp(y, this.boundary.top + 40, this.boundary.bottom - 40), this.spawnType);
-  }
+trySpawn(y) {
+  const costs = { fullstack: 5, cybersec: 15, cyborg: 10 };
+  if (this.coins < costs[this.spawnType]) return;
+
+  this.coins -= costs[this.spawnType];
+  this.updateCoinText();
+
+  // ✅ Define spawn zone around the player base
+  const baseX = this.playerBase.x + 50;   // shift a bit right of the castle
+  const minY = this.playerBase.y - this.playerBase.displayHeight / 4;
+  const maxY = this.playerBase.y + this.playerBase.displayHeight / 4;
+
+  const spawnY = Phaser.Math.Clamp(y, minY, maxY);
+
+  this.spawnPlayer(spawnY, this.spawnType, baseX);
+}
 
   spawnPlayer(y, type) {
     let hp = 12, atk = 2, speed = 140;
     let unit;
 
-    if (type === "cybersec") {
-      hp = 18; atk = 3; speed = 120;
-    }
+  // ✅ CyberSec is a castle guard, not a unit
+  if (type === "cybersec") {
+    this.createCastleGuard();
+    return null;
+  }
     if (type === "cyborg") {
       hp = 26; atk = 5; speed = 100; // 🔥 strongest
     }
@@ -588,20 +644,29 @@ this.enemyBaseText = this.add.text(
     return unit;
   }
 
+createCastleGuard() {
+  // Firewall sprite in front of player base
+  const guard = this.add.sprite(
+    this.playerBase.x + 280,
+    this.playerBase.y,    "laser1"
+  ).setScale(0.8, 1.0); // widen/tall for wall shape
 
-  createPlayerFirewall(durationMs = 5000) {
-    if (this.playerBaseShieldTimer) this.playerBaseShieldTimer.remove(false);
-    else {
-      this.playerShieldGraphic = this.add.rectangle(this.playerBase.x + 30, 300, 30, 180, 0x00ff88, 0.25);
-      this.playerBaseShielded = true;
-    }
-    this.playerBaseShieldTimer = this.time.delayedCall(durationMs, () => {
-      this.playerBaseShielded = false;
-      this.playerShieldGraphic?.destroy();
-      this.playerShieldGraphic = null;
-      this.playerBaseShieldTimer = null;
-    });
-  }
+  this.safePlay(guard, "firewall_anim"); // 🔥 play animation
+  this.physics.add.existing(guard, true);
+  this.castleGuard = guard;
+
+  // Collider: blocks enemies
+  this.physics.add.collider(this.enemies, guard);
+
+  // Optional: wall lasts 10s
+  this.time.delayedCall(10000, () => {
+    if (guard.active) guard.destroy();
+    this.castleGuard = null;
+  });
+}
+
+
+
 
   spawnEnemy(y, type) {
     let hp = 12, atk = 2, speed = 120;
@@ -609,6 +674,8 @@ this.enemyBaseText = this.add.text(
     if (type === "strong") { hp = 24; atk = 4; speed = 80; }
 
     let unit;
+
+    
 
     if (type === "weak") {
       // === Weak enemy (knight-style) ===
@@ -650,15 +717,21 @@ this.enemyBaseText = this.add.text(
 
 
 
-  spawnDrop(x, y) {
-    if (!this.boundary.contains(x, y)) return;
-    const drop = this.add.rectangle(x, y, 20, 20, 0xffff00);
-    this.physics.add.existing(drop);
-    drop.setInteractive();
-    drop.isCertificate = true;
-    this.drops.add(drop);
-    this.time.delayedCall(5000, () => { if (drop.active) drop.destroy(); });
-  }
+spawnDrop(x, y) {
+  if (!this.boundary.contains(x, y)) return;
+
+  const drop = this.add.sprite(x, y, "certificate").setScale(0.1);
+  this.physics.add.existing(drop);
+  drop.setInteractive();
+  drop.isCertificate = true;
+
+  this.drops.add(drop);
+
+  this.time.delayedCall(5000, () => {
+    if (drop.active) drop.destroy();
+  });
+}
+
 
   tryPickDrop(pointer) {
     let picked = false;
@@ -700,54 +773,71 @@ this.enemyBaseText = this.add.text(
     }
   }
 
-  update() {
-    if (this.isPaused) return;
+update() {
+  if (this.isPaused) return;
 
-    const clampUnit = (u) => {
-      if (!u.active) return;
-      const laserDamage = 0.05;
-      if (
-        u.x <= this.boundary.left + 20 ||
-        u.x >= this.boundary.right - 20 ||
-        u.y <= this.boundary.top + 20 ||
-        u.y >= this.boundary.bottom - 20
-      ) {
-        u.hp -= laserDamage;
-        if (u.hp <= 0) this.die(u);
+  const clampUnit = (u) => {
+    if (!u.active) return;
+    const laserDamage = 0.05;
+    if (
+      u.x <= this.boundary.left + 20 ||
+      u.x >= this.boundary.right - 20 ||
+      u.y <= this.boundary.top + 20 ||
+      u.y >= this.boundary.bottom - 20
+    ) {
+      u.hp -= laserDamage;
+      if (u.hp <= 0) this.die(u);
+    }
+
+    u.x = Phaser.Math.Clamp(u.x, this.boundary.left + 20, this.boundary.right - 20);
+    u.y = Phaser.Math.Clamp(u.y, this.boundary.top + 20, this.boundary.bottom - 20);
+  };
+
+  // ==== PLAYERS ====
+  this.players.getChildren().forEach((u) => {
+    if (!u.active) return;
+    if (u.fighting) {
+      u.body.setVelocity(0, 0);
+    } else {
+      this.safePlay(u, this.animKey(u, "run"), true);
+      const t = this.findPriorityEnemyFor(u);
+      if (t) this.physics.moveToObject(u, t, u.speed);
+      else this.physics.moveToObject(u, this.enemyBase, u.speed);
+    }
+    this.updateHealthBar(u);
+    clampUnit(u);
+  });
+
+  // ==== ENEMIES ====
+  this.enemies.getChildren().forEach((u) => {
+    if (!u.active) return;
+    if (u.fighting) {
+      u.body.setVelocity(0, 0);
+    } else {
+      this.safePlay(u, this.animKey(u, "run"), true);
+      const t = this.findPriorityPlayerFor(u);
+      if (t) this.physics.moveToObject(u, t, u.speed);
+      else this.physics.moveToObject(u, this.playerBase, u.speed);
+    }
+
+    // ✅ Guard wall damage
+    if (this.castleGuard && this.castleGuard.active) {
+      const touching = Phaser.Geom.Intersects.RectangleToRectangle(
+        u.getBounds(),
+        this.castleGuard.getBounds()
+      );
+      if (touching) {
+        u.body.setVelocity(0, 0);   // stop enemy
+        u.hp -= 0.5;                // 🔥 drain rate per frame
+        if (u.hp <= 0) this.die(u, true);  // ✅ instant kill
       }
+    }
 
-      u.x = Phaser.Math.Clamp(u.x, this.boundary.left + 20, this.boundary.right - 20);
-      u.y = Phaser.Math.Clamp(u.y, this.boundary.top + 20, this.boundary.bottom - 20);
-    };
+    this.updateHealthBar(u);
+    clampUnit(u);
+  });
+}
 
-    this.players.getChildren().forEach((u) => {
-      if (!u.active) return;
-      if (u.fighting) {
-        u.body.setVelocity(0, 0);
-      } else {
-        this.safePlay(u, this.animKey(u, "run"), true);
-        const t = this.findPriorityEnemyFor(u);
-        if (t) this.physics.moveToObject(u, t, u.speed);
-        else this.physics.moveToObject(u, this.enemyBase, u.speed);
-      }
-      this.updateHealthBar(u);
-      clampUnit(u);
-    });
-
-    this.enemies.getChildren().forEach((u) => {
-      if (!u.active) return;
-      if (u.fighting) {
-        u.body.setVelocity(0, 0);
-      } else {
-        this.safePlay(u, this.animKey(u, "run"), true);
-        const t = this.findPriorityPlayerFor(u);
-        if (t) this.physics.moveToObject(u, t, u.speed);
-        else this.physics.moveToObject(u, this.playerBase, u.speed);
-      }
-      this.updateHealthBar(u);
-      clampUnit(u);
-    });
-  }
 
   updateHealthBar(unit) {
     if (!unit.healthBar || !unit.active) return;
@@ -777,88 +867,142 @@ this.enemyBaseText = this.add.text(
   }
 
   // ====== COMBAT ======
-  handleFight(a, b) {
-    let player = a.side === "player" ? a : b.side === "player" ? b : null;
-    let enemy = a.side === "enemy" ? a : b.side === "enemy" ? b : null;
-    if (!player || !enemy || player.fighting || enemy.fighting) return;
+// ====== COMBAT ======
+handleFight(a, b) {
+  let player = a.side === "player" ? a : b.side === "player" ? b : null;
+  let enemy = a.side === "enemy" ? a : b.side === "enemy" ? b : null;
+  if (!player || !enemy || player.fighting || enemy.fighting) return;
 
-    player.fighting = true; enemy.fighting = true;
-    player.body.setVelocity(0, 0); enemy.body.setVelocity(0, 0);
+  player.fighting = true; 
+  enemy.fighting = true;
+  player.body.setVelocity(0, 0); 
+  enemy.body.setVelocity(0, 0);
 
-    this.safePlay(player, this.animKey(player, "attack"), true);
-    this.safePlay(enemy, this.animKey(enemy, "attack"), true);
+  this.safePlay(player, this.animKey(player, "attack"), true);
+  this.safePlay(enemy, this.animKey(enemy, "attack"), true);
 
-    const fightTick = this.time.addEvent({
-      delay: 800,
-      loop: true,
-      callback: () => {
-        if (!player.active || !enemy.active) {
-          fightTick.remove(false);
-          if (player.active) player.fighting = false;
-          if (enemy.active) enemy.fighting = false;
-          return;
+  const fightTick = this.time.addEvent({
+    delay: 800,
+    loop: true,
+    callback: () => {
+      if (!player.active || !enemy.active) {
+        fightTick.remove(false);
+        if (player.active) player.fighting = false;
+        if (enemy.active) enemy.fighting = false;
+        return;
+      }
+
+      const dist = Phaser.Math.Distance.Between(player.x, player.y, enemy.x, enemy.y);
+      if (dist > 60) {
+        player.fighting = false;
+        enemy.fighting = false;
+        fightTick.remove(false);
+        return;
+      }
+
+      this.safePlay(player, this.animKey(player, "attack"));
+      this.safePlay(enemy, this.animKey(enemy, "attack"));
+
+      player.hp -= enemy.attack;
+      enemy.hp -= player.attack;
+
+      if (enemy.hp <= 0) {
+        const now = this.time.now;
+
+        // ✅ Drop cooldown: 1 drop max every 3 seconds
+        if (now - (this.lastDropTime || 0) > 5000) {
+          // ✅ Drop chance reduced to 15%
+          if (Phaser.Math.Between(1, 100) <= 5) {
+            this.spawnDrop(enemy.x, enemy.y);
+            this.lastDropTime = now;
+          }
         }
 
-        const dist = Phaser.Math.Distance.Between(player.x, player.y, enemy.x, enemy.y);
-        if (dist > 60) {
-          player.fighting = false;
-          enemy.fighting = false;
-          fightTick.remove(false);
-          return;
+        this.die(enemy);
+        this.coins += 3; 
+        this.updateCoinText();
+        player.fighting = false;
+        fightTick.remove(false);
+      }
+
+      if (player.hp <= 0) {
+        this.die(player);
+        enemy.fighting = false;
+        fightTick.remove(false);
+      }
+    },
+  });
+}
+
+
+handleBaseAttack(obj1, obj2) {
+  let unit = obj1.side ? obj1 : obj2.side ? obj2 : null;
+  let base = unit === obj1 ? obj2 : obj1;
+  if (!unit || !unit.active || unit.attackingBase) return;
+
+  unit.fighting = true;
+  unit.attackingBase = true;
+  unit.body.setVelocity(0, 0);
+  this.safePlay(unit, this.animKey(unit, "attack"), true);
+
+  const tick = this.time.addEvent({
+    delay: 800,
+    loop: true,
+    callback: () => {
+      if (!unit.active) {
+        tick.remove(false);
+        return;
+      }
+
+      this.safePlay(unit, this.animKey(unit, "attack"), true);
+
+      // === Player Base Under Attack ===
+      if (base === this.playerBase) {
+        const dmg = unit.attack * (this.playerBaseShielded ? 0.5 : 1);
+        this.playerBaseHP -= dmg;
+        this.playerBaseText.setText("Job HP: " + Math.max(0, Math.ceil(this.playerBaseHP)));
+
+        // Update castle sprite
+        this.updateBaseSprite(this.playerBase, this.playerBaseHP, 100, true);
+
+        if (this.playerBaseHP <= 0) {
+          tick.remove(false);
+          this.endGame("AI Wins! You're outsourced!");
         }
 
-        this.safePlay(player, this.animKey(player, "attack"));
-        this.safePlay(enemy, this.animKey(enemy, "attack"));
+      // === Enemy Base Under Attack ===
+      } else {
+        this.enemyBaseHP -= unit.attack;
+        this.enemyBaseText.setText("AI HP: " + Math.max(0, Math.ceil(this.enemyBaseHP)));
 
-        player.hp -= enemy.attack;
-        enemy.hp -= player.attack;
+        // Update castle sprite
+        this.updateBaseSprite(this.enemyBase, this.enemyBaseHP, 100, false);
 
-        if (enemy.hp <= 0) {
-          if (Phaser.Math.Between(1, 100) <= 30) this.spawnDrop(enemy.x, enemy.y);
-          this.die(enemy);
-          this.coins += 3; this.updateCoinText();
-          player.fighting = false;
-          fightTick.remove(false);
+        if (this.enemyBaseHP <= 0) {
+          tick.remove(false);
+          this.endGame("You Win! The Job is safe!");
         }
-        if (player.hp <= 0) {
-          this.die(player);
-          enemy.fighting = false;
-          fightTick.remove(false);
-        }
-      },
-    });
+      }
+    },
+  });
+}
+updateBaseSprite(base, currentHP, maxHP, isPlayer) {
+  const pct = currentHP / maxHP;
+
+  let stage = 1;
+  if (pct <= 0.66 && pct > 0.33) stage = 2;
+  else if (pct <= 0.33) stage = 3;
+
+  if (base.getData("stage") !== stage) {
+    base.setData("stage", stage);
+    if (isPlayer) {
+      base.setTexture(`playercamp${stage}`);
+    } else {
+      base.setTexture(`aicamp${stage}`);
+    }
   }
+}
 
-  handleBaseAttack(obj1, obj2) {
-    let unit = obj1.side ? obj1 : obj2.side ? obj2 : null;
-    let base = unit === obj1 ? obj2 : obj1;
-    if (!unit || !unit.active || unit.attackingBase) return;
-
-    unit.fighting = true; unit.attackingBase = true;
-    unit.body.setVelocity(0, 0);
-    this.safePlay(unit, this.animKey(unit, "attack"), true);
-
-    const tick = this.time.addEvent({
-      delay: 800,
-      loop: true,
-      callback: () => {
-        if (!unit.active) { tick.remove(false); return; }
-
-        this.safePlay(unit, this.animKey(unit, "attack"), true);
-
-        if (base === this.playerBase) {
-          const dmg = unit.attack * (this.playerBaseShielded ? 0.5 : 1);
-          this.playerBaseHP -= dmg;
-          this.playerBaseText.setText("Job HP: " + Math.max(0, Math.ceil(this.playerBaseHP)));
-          if (this.playerBaseHP <= 0) this.endGame("AI Wins! You're outsourced!");
-        } else {
-          this.enemyBaseHP -= unit.attack;
-          this.enemyBaseText.setText("AI HP: " + Math.max(0, Math.ceil(this.enemyBaseHP)));
-          if (this.enemyBaseHP <= 0) this.endGame("You Win! The Job is safe!");
-        }
-      },
-    });
-  }
 
   // ===== projectiles =====
   handleProjectileHit(proj, enemy) {
@@ -950,60 +1094,60 @@ export default function Game() {
   return (
     <div className="game-container">
       <div id="phaser-container" className="phaser-container" >
-{!isGameRunning && !gameMessage && (
-  <div className="game-overlay start-screen">
-    <div className="overlay-content text-center">
-      {/* Title */}
-      <h1 className="game-title">
-        ⚔️ Humans vs AI 🤖
-      </h1>
+        {!isGameRunning && !gameMessage && (
+          <div className="game-overlay start-screen">
+            <div className="overlay-content text-center">
+              {/* Title */}
+              <h1 className="game-title">
+                ⚔️ Humans vs AI 🤖
+              </h1>
 
-      {/* Hook */}
-      <p className="game-subtitle glow-text">
-        The AI wants to steal your job… <br />
-        Will YOU rise as the defender? 🚀
-      </p>
+              {/* Hook */}
+              <p className="game-subtitle glow-text">
+                The AI wants to steal your job… <br />
+                Will YOU rise as the defender? 🚀
+              </p>
 
-      {/* How to Play */}
-      <div className="game-howto neon-box">
-        <p>👨‍💻 <strong>Click</strong> inside arena to deploy Engineers</p>
-        <p>💰 <strong>Collect</strong> coins to build your army</p>
-        <p>📜 <strong>Certificates</strong> wipe out nearby AI bots</p>
-        <p>🏢 <strong>Destroy</strong> the AI Core before time runs out!</p>
-      </div>
+              {/* How to Play */}
+              <div className="game-howto neon-box">
+                <p>👨‍💻 <strong>Click</strong> inside arena to deploy Engineers</p>
+                <p>💰 <strong>Collect</strong> coins to build your army</p>
+                <p>📜 <strong>Certificates</strong> wipe out nearby AI bots</p>
+                <p>🏢 <strong>Destroy</strong> the AI Core before time runs out!</p>
+              </div>
 
-      {/* Info Section */}
-      <details className="info-panel">
-        <summary>ℹ️ Meet Your Heroes</summary>
-        <div className="hero-cards">
-          <div className="hero-card">
-            <span className="hero-emoji">🗡️</span>
-            <h3>Fullstack Dev</h3>
-            <p>Melee fighter with close-range attacks.</p>
+              {/* Info Section */}
+              <details className="info-panel">
+                <summary>ℹ️ Meet Your Heroes</summary>
+                <div className="hero-cards">
+                  <div className="hero-card">
+                    <span className="hero-emoji">🗡️</span>
+                    <h3>Fullstack Dev</h3>
+                    <p>Melee fighter with close-range attacks.</p>
+                  </div>
+                  <div className="hero-card">
+                    <span className="hero-emoji">🛡️</span>
+                    <h3>Cybersec Expert</h3>
+                    <p>Builds firewalls to protect jobs & data.</p>
+                  </div>
+                  <div className="hero-card">
+                    <span className="hero-emoji">🤖</span>
+                    <h3>Cyborg</h3>
+                    <p>Turns AI’s own power against its bots.</p>
+                  </div>
+                </div>
+              </details>
+
+              {/* Start Button */}
+              <button
+                onClick={startGame}
+                className="game-button start-button glow"
+              >
+                🎮 Enter the Battle
+              </button>
+            </div>
           </div>
-          <div className="hero-card">
-            <span className="hero-emoji">🛡️</span>
-            <h3>Cybersec Expert</h3>
-            <p>Builds firewalls to protect jobs & data.</p>
-          </div>
-          <div className="hero-card">
-            <span className="hero-emoji">🤖</span>
-            <h3>Cyborg</h3>
-            <p>Turns AI’s own power against its bots.</p>
-          </div>
-        </div>
-      </details>
-
-      {/* Start Button */}
-      <button
-        onClick={startGame}
-        className="game-button start-button glow"
-      >
-        🎮 Enter the Battle
-      </button>
-    </div>
-  </div>
-)}
+        )}
 
         {gameMessage && (
           <div className="game-overlay end-screen">
