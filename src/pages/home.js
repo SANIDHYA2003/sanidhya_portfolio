@@ -4,7 +4,7 @@ import { Typewriter } from "react-simple-typewriter";
 import Game from "../components/Game";
 
 function Home() {
-  const { Theme, themeToggleButton } = useContext(ThemeContext);
+  const { Theme } = useContext(ThemeContext);
 
   useEffect(() => {
     console.log("current theme ", Theme);
@@ -16,11 +16,43 @@ function Home() {
       id="home"
     >
       <div className="floating" style={{ textAlign: "center" }}>
-        <h1 className="home-title" style={{ marginBottom: "1rem" }}>
+        {/* 🌟 Main Title */}
+        <h1
+          style={{
+            fontSize: "clamp(2.5rem, 6vw, 4.5rem)",
+            fontWeight: "800",
+            background: "linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            marginBottom: "1.2rem",
+            letterSpacing: "1px",
+          }}
+        >
           Welcome to My Portfolio
         </h1>
 
-        <h2 style={{ color: "white", fontSize: "1.5rem", marginBottom: "2rem" }}>
+        {/* ✨ Catchy Welcome Message */}
+        <p
+          style={{
+            color: Theme === "dark" ? "#00e0ff" : "#1e3a8a",
+            fontSize: "1.4rem",
+            fontWeight: "600",
+            marginBottom: "1.5rem",
+            textShadow: Theme === "dark" ? "0 0 12px rgba(0,224,255,0.6)" : "none",
+          }}
+        >
+          ⚡ Powering Ideas with Code & Creativity ⚡
+        </p>
+
+        {/* 🔄 Rotating Roles */}
+        <h2
+          style={{
+            color: "white",
+            fontSize: "1.6rem",
+            fontWeight: "500",
+            marginBottom: "2rem",
+          }}
+        >
           <Typewriter
             words={[
               "Full Stack Developer 💻",
@@ -38,13 +70,9 @@ function Home() {
           />
         </h2>
 
-        <button className="theme-toggle" onClick={themeToggleButton}>
-          {Theme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode"}
-        </button>
+        {/* 🎮 Mini Game */}
+        <Game />
       </div>
-
-      {/* 🎮 Mini Game */}
-      <Game />
     </div>
   );
 }

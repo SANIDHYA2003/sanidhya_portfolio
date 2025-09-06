@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as Phaser from "phaser";
+import "./CSS/game.css"
 
 class BattleScene extends Phaser.Scene {
   constructor(onGameEnd, gameDuration) {
@@ -10,78 +11,85 @@ class BattleScene extends Phaser.Scene {
   }
 
   preload() {
-    // ===== PLAYER (knight) — individual frames =====
-// ===== FULLSTACK PLAYER (Biker) — sprite sheets =====
-this.load.spritesheet("fs_idle", "game_asset/fullstack_player/Biker_idle.png", {
-  frameWidth: 48,   // adjust based on actual sheet
-  frameHeight: 48,
-});
-this.load.spritesheet("fs_run", "game_asset/fullstack_player/Biker_run.png", {
-  frameWidth: 48,   // adjust based on actual sheet
-  frameHeight: 48,
-});
-this.load.spritesheet("fs_attack", "game_asset/fullstack_player/Biker_attack3.png", {
-  frameWidth: 48,   // adjust based on actual sheet
-  frameHeight: 48,
-});
-this.load.spritesheet("fs_death", "game_asset/fullstack_player/Biker_death.png", {
-  frameWidth: 48,   // adjust based on actual sheet
-  frameHeight: 48,
-});
-this.load.spritesheet("fs_hurt", "game_asset/fullstack_player/Biker_hurt.png", {
-  frameWidth: 48,   // adjust based on actual sheet
-  frameHeight: 48,
-});
 
-// ===== PLAYER CYBORG (ranged strongest) =====
-this.load.spritesheet("cyborg_idle", "game_asset/cyborg/Cyborg_idle.png", {
-  frameWidth: 48,
-  frameHeight: 48,
-});
-this.load.spritesheet("cyborg_run", "game_asset/cyborg/Cyborg_run.png", {
-  frameWidth: 48,
-  frameHeight: 48,
-});
-this.load.spritesheet("cyborg_attack", "game_asset/cyborg/Cyborg_attack3.png", {
-  frameWidth: 48,
-  frameHeight: 48,
-});
-this.load.spritesheet("cyborg_death", "game_asset/cyborg/Cyborg_death.png", {
-  frameWidth: 48,
-  frameHeight: 48,
-});
-this.load.spritesheet("cyborg_hurt", "game_asset/cyborg/Cyborg_hurt.png", {
-  frameWidth: 48,
-  frameHeight: 48,
-});
+    this.load.image("bg1", "game_asset/battlegrounds/1/1.png");
+    this.load.image("bg2", "game_asset/battlegrounds/1/2.png");
+    this.load.image("bg3", "game_asset/battlegrounds/1/3.png");
+    this.load.image("bg4", "game_asset/battlegrounds/1/4.png");
+    this.load.image("bg5", "game_asset/battlegrounds/1/5.png");
+    this.load.image("bgTerrace", "game_asset/battlegrounds/1/terrace.png");
+
+    // ===== FULLSTACK PLAYER (Biker) — sprite sheets =====
+    this.load.spritesheet("fs_idle", "game_asset/fullstack_player/Biker_idle.png", {
+      frameWidth: 48,   // adjust based on actual sheet
+      frameHeight: 48,
+    });
+    this.load.spritesheet("fs_run", "game_asset/fullstack_player/Biker_run.png", {
+      frameWidth: 48,   // adjust based on actual sheet
+      frameHeight: 48,
+    });
+    this.load.spritesheet("fs_attack", "game_asset/fullstack_player/Biker_attack3.png", {
+      frameWidth: 48,   // adjust based on actual sheet
+      frameHeight: 48,
+    });
+    this.load.spritesheet("fs_death", "game_asset/fullstack_player/Biker_death.png", {
+      frameWidth: 48,   // adjust based on actual sheet
+      frameHeight: 48,
+    });
+    this.load.spritesheet("fs_hurt", "game_asset/fullstack_player/Biker_hurt.png", {
+      frameWidth: 48,   // adjust based on actual sheet
+      frameHeight: 48,
+    });
+
+    // ===== PLAYER CYBORG (ranged strongest) =====
+    this.load.spritesheet("cyborg_idle", "game_asset/cyborg/Cyborg_idle.png", {
+      frameWidth: 48,
+      frameHeight: 48,
+    });
+    this.load.spritesheet("cyborg_run", "game_asset/cyborg/Cyborg_run.png", {
+      frameWidth: 48,
+      frameHeight: 48,
+    });
+    this.load.spritesheet("cyborg_attack", "game_asset/cyborg/Cyborg_attack3.png", {
+      frameWidth: 48,
+      frameHeight: 48,
+    });
+    this.load.spritesheet("cyborg_death", "game_asset/cyborg/Cyborg_death.png", {
+      frameWidth: 48,
+      frameHeight: 48,
+    });
+    this.load.spritesheet("cyborg_hurt", "game_asset/cyborg/Cyborg_hurt.png", {
+      frameWidth: 48,
+      frameHeight: 48,
+    });
 
 
 
-for (let i = 1; i <= 10; i++) this.load.image(`e_idle${i}`, `game_asset/png/Idle_${i}.png`);
-for (let i = 1; i <= 8; i++) this.load.image(`e_run${i}`, `game_asset/png/Run_${i}.png`);
-for (let i = 1; i <= 8; i++) this.load.image(`e_attack${i}`, `game_asset/png/Melee_${i}.png`);
-for (let i = 1; i <= 10; i++) this.load.image(`e_dead${i}`, `game_asset/png/Dead_${i}.png`);
+    for (let i = 1; i <= 10; i++) this.load.image(`e_idle${i}`, `game_asset/png/Idle_${i}.png`);
+    for (let i = 1; i <= 8; i++) this.load.image(`e_run${i}`, `game_asset/png/Run_${i}.png`);
+    for (let i = 1; i <= 8; i++) this.load.image(`e_attack${i}`, `game_asset/png/Melee_${i}.png`);
+    for (let i = 1; i <= 10; i++) this.load.image(`e_dead${i}`, `game_asset/png/Dead_${i}.png`);
 
     // ===== ENEMY (robot) — sprite sheets =====
     this.load.spritesheet("robot_idle", "game_asset/robot_melee/Idle.png", {
-  frameWidth: 96,
-  frameHeight: 96,
+      frameWidth: 96,
+      frameHeight: 96,
     });
     this.load.spritesheet("robot_walk", "game_asset/robot_melee/Walk.png", {
-  frameWidth: 96,
-  frameHeight: 96,
+      frameWidth: 96,
+      frameHeight: 96,
     });
     this.load.spritesheet("robot_attack", "game_asset/robot_melee/Attack3.png", {
-  frameWidth: 96,
-  frameHeight: 96,
+      frameWidth: 96,
+      frameHeight: 96,
     });
     this.load.spritesheet("robot_death", "game_asset/robot_melee/Death.png", {
-  frameWidth: 96,
-  frameHeight: 96,
+      frameWidth: 96,
+      frameHeight: 96,
     });
     this.load.spritesheet("robot_hurt", "game_asset/robot_melee/Hurt.png", {
-  frameWidth: 96,
-  frameHeight: 96,
+      frameWidth: 96,
+      frameHeight: 96,
     });
   }
 
@@ -92,16 +100,17 @@ for (let i = 1; i <= 10; i++) this.load.image(`e_dead${i}`, `game_asset/png/Dead
   }
 
   // map "idle/run/attack/dead" => side-specific anim keys
-// map "idle/run/attack/dead" => side+type-specific anim keys
-animKey(unit, action) {
-  if (!unit) return null;
+  // map "idle/run/attack/dead" => side+type-specific anim keys
+  animKey(unit, action) {
+    if (!unit) return null;
 
     // Fullstack player (biker)
     if (unit.type === "fullstack") {
       if (action === "idle") return "fs_idle";
       if (action === "run") return "fs_run";
       if (action === "attack") return "fs_attack";
-      if (action === "dead") return "fs_dead";}
+      if (action === "dead") return "fs_dead";
+    }
 
     if (unit.type === "cyborg") {
       if (action === "idle") return "c_idle";
@@ -110,26 +119,26 @@ animKey(unit, action) {
       if (action === "dead") return "c_dead";
     }
 
-      
-  // ENEMIES
-  if (unit.side === "enemy") {
-    if (unit.type === "weak") {
-      // weak = knight-style
-      if (action === "idle") return "e_idle";
-      if (action === "run") return "e_run";
-      if (action === "attack") return "e_attack";
-      if (action === "dead") return "e_dead";
-    } else {
-      // medium/strong = robot-style
-      if (action === "idle") return "r_idle";
-      if (action === "run") return "r_walk";
-      if (action === "attack") return "r_attack";
-      if (action === "dead") return "r_dead";
-    }
-  }
 
-  return null;
-}
+    // ENEMIES
+    if (unit.side === "enemy") {
+      if (unit.type === "weak") {
+        // weak = knight-style
+        if (action === "idle") return "e_idle";
+        if (action === "run") return "e_run";
+        if (action === "attack") return "e_attack";
+        if (action === "dead") return "e_dead";
+      } else {
+        // medium/strong = robot-style
+        if (action === "idle") return "r_idle";
+        if (action === "run") return "r_walk";
+        if (action === "attack") return "r_attack";
+        if (action === "dead") return "r_dead";
+      }
+    }
+
+    return null;
+  }
 
   firstFrameKeyFor(key) {
     // Only used if an animation is missing; give a safe still-frame fallback
@@ -177,101 +186,117 @@ animKey(unit, action) {
   }
 
   create() {
+    // ===== BACKGROUND =====
+    this.bg1 = this.add.image(0, 0, "bg1").setOrigin(0, 0).setScrollFactor(0.1);
+    this.bg2 = this.add.image(0, 0, "bg2").setOrigin(0, 0).setScrollFactor(0.3);
+    this.bg3 = this.add.image(0, 0, "bg3").setOrigin(0, 0).setScrollFactor(0.5);
+    this.bg4 = this.add.image(0, 0, "bg4").setOrigin(0, 0).setScrollFactor(0.7);
+    this.bg5 = this.add.image(0, 0, "bg5").setOrigin(0, 0).setScrollFactor(0.9);
+    this.bgTerrace = this.add.image(0, 0, "bgTerrace").setOrigin(0, 0).setScrollFactor(1);
 
+    const { width, height } = this.sys.game.config;
+    [this.bg1, this.bg2, this.bg3, this.bg4, this.bg5, this.bgTerrace].forEach(bg => {
+      bg.displayWidth = width;
+      bg.displayHeight = height;
+    });
+
+    // ===== CAMERA & WORLD BOUNDS =====
+    this.cameras.main.setBounds(0, 0, 2000, height);
+    this.physics.world.setBounds(0, 0, 2000, height);
 
     //enemyknights for weak
 
     this.anims.create({
-  key: "e_idle",
-  frames: Array.from({ length: 10 }, (_, i) => ({ key: `e_idle${i + 1}` })),
-  frameRate: 6,
-  repeat: -1,
-});
-this.anims.create({
-  key: "e_run",
-  frames: Array.from({ length: 8 }, (_, i) => ({ key: `e_run${i + 1}` })),
-  frameRate: 10,
-  repeat: -1,
-});
-this.anims.create({
-  key: "e_attack",
-  frames: Array.from({ length: 8 }, (_, i) => ({ key: `e_attack${i + 1}` })),
-  frameRate: 12,
-  repeat: 0,
-});
-this.anims.create({
-  key: "e_dead",
-  frames: Array.from({ length: 10 }, (_, i) => ({ key: `e_dead${i + 1}` })),
-  frameRate: 10,
-  repeat: 0,
-});
+      key: "e_idle",
+      frames: Array.from({ length: 10 }, (_, i) => ({ key: `e_idle${i + 1}` })),
+      frameRate: 6,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "e_run",
+      frames: Array.from({ length: 8 }, (_, i) => ({ key: `e_run${i + 1}` })),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "e_attack",
+      frames: Array.from({ length: 8 }, (_, i) => ({ key: `e_attack${i + 1}` })),
+      frameRate: 12,
+      repeat: 0,
+    });
+    this.anims.create({
+      key: "e_dead",
+      frames: Array.from({ length: 10 }, (_, i) => ({ key: `e_dead${i + 1}` })),
+      frameRate: 10,
+      repeat: 0,
+    });
 
     // Verify knight frames loaded
     this.verifyAssets();
 
-   // ===== FULLSTACK PLAYER ANIMS =====
-this.anims.create({
-  key: "fs_idle",
-  frames: this.anims.generateFrameNumbers("fs_idle", { start: 0, end: 3 }),
-  frameRate: 6,
-  repeat: -1,
-});
-this.anims.create({
-  key: "fs_run",
-  frames: this.anims.generateFrameNumbers("fs_run", { start: 0, end: 5 }),
-  frameRate: 10,
-  repeat: -1,
-});
-this.anims.create({
-  key: "fs_attack",
-  frames: this.anims.generateFrameNumbers("fs_attack", { start: 0, end: 5 }),
-  frameRate: 12,
-  repeat: 0,
-});
-this.anims.create({
-  key: "fs_dead",
-  frames: this.anims.generateFrameNumbers("fs_death", { start: 0, end: 5 }),
-  frameRate: 10,
-  repeat: 0,
-});
-this.anims.create({
-  key: "fs_hurt",
-  frames: this.anims.generateFrameNumbers("fs_hurt", { start: 0, end: 1 }),
-  frameRate: 8,
-  repeat: 0,
-});
+    // ===== FULLSTACK PLAYER ANIMS =====
+    this.anims.create({
+      key: "fs_idle",
+      frames: this.anims.generateFrameNumbers("fs_idle", { start: 0, end: 3 }),
+      frameRate: 6,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "fs_run",
+      frames: this.anims.generateFrameNumbers("fs_run", { start: 0, end: 5 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "fs_attack",
+      frames: this.anims.generateFrameNumbers("fs_attack", { start: 0, end: 5 }),
+      frameRate: 12,
+      repeat: 0,
+    });
+    this.anims.create({
+      key: "fs_dead",
+      frames: this.anims.generateFrameNumbers("fs_death", { start: 0, end: 5 }),
+      frameRate: 10,
+      repeat: 0,
+    });
+    this.anims.create({
+      key: "fs_hurt",
+      frames: this.anims.generateFrameNumbers("fs_hurt", { start: 0, end: 1 }),
+      frameRate: 8,
+      repeat: 0,
+    });
 
-// ===== CYBORG ANIMS =====
-this.anims.create({
-  key: "c_idle",
-  frames: this.anims.generateFrameNumbers("cyborg_idle", { start: 0, end: 3 }),
-  frameRate: 6,
-  repeat: -1,
-});
-this.anims.create({
-  key: "c_run",
-  frames: this.anims.generateFrameNumbers("cyborg_run", { start: 0, end: 5 }),
-  frameRate: 10,
-  repeat: -1,
-});
-this.anims.create({
-  key: "c_attack",
-  frames: this.anims.generateFrameNumbers("cyborg_attack", { start: 0, end: 6 }),
-  frameRate: 12,
-  repeat: 0,
-});
-this.anims.create({
-  key: "c_dead",
-  frames: this.anims.generateFrameNumbers("cyborg_death", { start: 0, end: 5 }),
-  frameRate: 10,
-  repeat: 0,
-});
-this.anims.create({
-  key: "c_hurt",
-  frames: this.anims.generateFrameNumbers("cyborg_hurt", { start: 0, end: 1 }),
-  frameRate: 8,
-  repeat: 0,
-});
+    // ===== CYBORG ANIMS =====
+    this.anims.create({
+      key: "c_idle",
+      frames: this.anims.generateFrameNumbers("cyborg_idle", { start: 0, end: 3 }),
+      frameRate: 6,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "c_run",
+      frames: this.anims.generateFrameNumbers("cyborg_run", { start: 0, end: 5 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "c_attack",
+      frames: this.anims.generateFrameNumbers("cyborg_attack", { start: 0, end: 6 }),
+      frameRate: 12,
+      repeat: 0,
+    });
+    this.anims.create({
+      key: "c_dead",
+      frames: this.anims.generateFrameNumbers("cyborg_death", { start: 0, end: 5 }),
+      frameRate: 10,
+      repeat: 0,
+    });
+    this.anims.create({
+      key: "c_hurt",
+      frames: this.anims.generateFrameNumbers("cyborg_hurt", { start: 0, end: 1 }),
+      frameRate: 8,
+      repeat: 0,
+    });
 
 
     // ===== ROBOT ANIMS (from sheets) =====
@@ -317,30 +342,50 @@ this.anims.create({
     this.spawnType = "fullstack";
 
     // Battlefield
-    this.boundary = new Phaser.Geom.Rectangle(100, 100, 600, 400);
+this.boundary = new Phaser.Geom.Rectangle(
+  50, // left margin
+  50, // top margin
+  this.sys.game.config.width - 100,  // width with side margins
+  this.sys.game.config.height - 150 // height with top/bottom margins
+);
     this.createBackground();
     this.drawBattleBoundary();
 
     // Bases
-    this.playerBaseHP = 100;
-    this.playerBase = this.add.rectangle(120, 300, 40, 160, 0x00aa00);
-    this.physics.add.existing(this.playerBase, true);
+// Bases (stick to edges of arena)
+this.playerBaseHP = 100;
+this.playerBase = this.add.rectangle(
+  this.boundary.left + 40,
+  this.boundary.centerY,
+  40, 160,
+  0x00aa00
+);
+this.physics.add.existing(this.playerBase, true);
 
-    this.enemyBaseHP = 100;
-    this.enemyBase = this.add.rectangle(680, 300, 40, 160, 0xaa0000);
-    this.physics.add.existing(this.enemyBase, true);
+this.enemyBaseHP = 100;
+this.enemyBase = this.add.rectangle(
+  this.boundary.right - 40,
+  this.boundary.centerY,
+  40, 160,
+  0xaa0000
+);
+this.physics.add.existing(this.enemyBase, true);
 
-    this.playerBaseText = this.add.text(20, 60, "Job HP: 100", {
-      fontSize: "18px",
-      fill: "#fff",
-      backgroundColor: "#000",
-    });
+// HP Labels (align with arena edges too)
+this.playerBaseText = this.add.text(
+  this.boundary.left + 20,
+  this.boundary.top + 10,
+  "Job HP: 100",
+  { fontSize: "18px", fill: "#fff", backgroundColor: "#000" }
+);
 
-    this.enemyBaseText = this.add.text(650, 60, "AI HP: 100", {
-      fontSize: "18px",
-      fill: "#fff",
-      backgroundColor: "#000",
-    });
+this.enemyBaseText = this.add.text(
+  this.boundary.right - 120,
+  this.boundary.top + 10,
+  "AI HP: 100",
+  { fontSize: "18px", fill: "#fff", backgroundColor: "#000" }
+);
+
 
     this.coinText = this.add.text(340, 20, `Coins: ${this.coins}`, {
       fontSize: "20px",
@@ -382,54 +427,73 @@ this.anims.create({
     });
 
     // Enemy spawns
-this.time.delayedCall(500, () => {
-  this.time.addEvent({
-    delay: 1500,
-    loop: true,
-    callback: () => {
-      // Pick a random enemy type
-      const enemyTypes = ["weak", "medium", "strong"];
-      const type = Phaser.Utils.Array.GetRandom(enemyTypes);
+    this.time.delayedCall(500, () => {
+      this.time.addEvent({
+        delay: 1500,
+        loop: true,
+        callback: () => {
+          // Pick a random enemy type
+          const enemyTypes = ["weak", "medium", "strong"];
+          const type = Phaser.Utils.Array.GetRandom(enemyTypes);
 
-      // Pick a random y inside the battlefield
-      const y = Phaser.Math.Between(this.boundary.top + 40, this.boundary.bottom - 40);
+          // Pick a random y inside the battlefield
+          const y = Phaser.Math.Between(this.boundary.top + 40, this.boundary.bottom - 40);
 
-      this.spawnEnemy(y, type);
-    },
-  });
-});
+          this.spawnEnemy(y, type);
+        },
+      });
+    });
 
   }
   createBackground() {
+    // Optional: add a subtle vignette overlay to make the battleground pop
     const g = this.add.graphics();
-    g.lineStyle(1, 0x222222);
-    for (let x = 0; x < 800; x += 50) g.lineBetween(x, 0, x, 600);
-    for (let y = 0; y < 600; y += 50) g.lineBetween(0, y, 800, y);
+    g.fillStyle(0x000000, 0.25); // semi-transparent black
+    g.fillRect(0, 0, 800, 600);
+
+    // You can also add a very faint glow effect later if you like
   }
 
   drawBattleBoundary() {
     const g = this.add.graphics();
-    g.lineStyle(4, 0x00ffff, 0.8);
+
+    // Soft glowing boundary around the play area
+    g.lineStyle(3, 0xffffff, 0.15); // thin, faint white line
     g.strokeRectShape(this.boundary);
+
+    // Add a translucent fill so the play zone feels distinct
+    g.fillStyle(0x111111, 0.15);
+    g.fillRectShape(this.boundary);
   }
 
+
   createAvatarButtons() {
+    const { height } = this.sys.game.config;
+
     const avatars = [
-      { type: "fullstack", label: "Fullstack (5c)", x: 150 },
-      { type: "cybersec", label: "CyberSec (15c)", x: 350 },
-      { type: "cyborg", label: "AI/ML (5c)", x: 550 },
+      { type: "fullstack", label: "Fullstack (5c)", x: 200 },
+      { type: "cybersec", label: "CyberSec (15c)", x: 400 },
+      { type: "cyborg", label: "AI/ML (30c)", x: 600 },
     ];
+
     this.avatarButtons = [];
+
     avatars.forEach((a) => {
-      const rect = this.add.rectangle(a.x, 20, 150, 40, 0x444444).setInteractive();
-      const txt = this.add.text(a.x, 20, a.label, { fontSize: "14px", fill: "#fff" }).setOrigin(0.5);
+      const rect = this.add.rectangle(a.x, height - 40, 160, 40, 0x444444).setInteractive();
+      const txt = this.add.text(a.x, height - 40, a.label, {
+        fontSize: "14px",
+        fill: "#fff"
+      }).setOrigin(0.5);
+
       rect.on("pointerdown", () => this.setSpawnType(a.type));
       rect.on("pointerover", () => rect.setFillStyle(0x666666));
       rect.on("pointerout", () => {
         if (this.spawnType !== a.type) rect.setFillStyle(0x444444);
       });
+
       this.avatarButtons.push({ type: a.type, rect, txt });
     });
+
     this.highlightSelected("fullstack");
   }
 
@@ -445,84 +509,84 @@ this.time.delayedCall(500, () => {
   }
 
   trySpawn(y) {
-    const costs = { fullstack: 5, cybersec: 15, aiml: 30 };
+    const costs = { fullstack: 5, cybersec: 15, cyborg: 10 };
     if (this.coins < costs[this.spawnType]) return;
     this.coins -= costs[this.spawnType];
     this.updateCoinText();
     this.spawnPlayer(Phaser.Math.Clamp(y, this.boundary.top + 40, this.boundary.bottom - 40), this.spawnType);
   }
 
-spawnPlayer(y, type) {
-  let hp = 12, atk = 2, speed = 140;
-  let unit;
+  spawnPlayer(y, type) {
+    let hp = 12, atk = 2, speed = 140;
+    let unit;
 
-  if (type === "cybersec") {
-    hp = 18; atk = 3; speed = 120;
+    if (type === "cybersec") {
+      hp = 18; atk = 3; speed = 120;
+    }
+    if (type === "cyborg") {
+      hp = 26; atk = 5; speed = 100; // 🔥 strongest
+    }
+
+    if (type === "cyborg") {
+      unit = this.add.sprite(this.boundary.left + 30, y, "cyborg_idle", 0).setScale(1.5);
+      this.physics.add.existing(unit);
+      this.safePlay(unit, "c_run");
+    } else {
+      unit = this.add.sprite(this.boundary.left + 30, y, "idle1").setScale(1.0);
+      this.physics.add.existing(unit);
+      this.safePlay(unit, "p_run");
+    }
+
+    // Players face right
+    unit.setFlipX(false);
+
+    // Physics
+    unit.body.setCollideWorldBounds(true).setBounce(0).setImmovable(false);
+    unit.body.onWorldBounds = true;
+
+    // Stats
+    unit.side = "player";
+    unit.type = type;
+    unit.hp = hp;
+    unit.maxHp = hp;
+    unit.attack = atk;
+    unit.speed = speed;
+    unit.fighting = false;
+    unit.attackingBase = false;
+    unit.healthBar = this.add.graphics();
+    this.updateHealthBar(unit);
+    this.players.add(unit);
+
+    // ✅ Cyborg ranged attack logic
+    if (type === "cyborg") {
+      unit.shootTimer = this.time.addEvent({
+        delay: 1400,
+        loop: true,
+        callback: () => {
+          if (!unit.active) return;
+          const target = this.findPriorityEnemyFor(unit);
+          if (!target) return;
+
+          // Fire projectile
+          const projectile = this.add.circle(unit.x, unit.y, 5, 0x00ff00);
+          this.physics.add.existing(projectile);
+          projectile.attack = unit.attack * 2; // 🔥 stronger damage
+          this.projectiles.add(projectile);
+
+          this.physics.moveToObject(projectile, target, 300);
+
+          this.time.delayedCall(2200, () => projectile.destroy());
+          this.safePlay(unit, "c_attack");
+        },
+      });
+    }
+
+    // Adjust collision box
+    unit.body.setSize(unit.width * 0.35, unit.height * 0.75);
+    unit.body.setOffset(unit.width * 0.32, unit.height * 0.25);
+
+    return unit;
   }
-  if (type === "cyborg") {
-    hp = 26; atk = 5; speed = 100; // 🔥 strongest
-  }
-
-  if (type === "cyborg") {
-    unit = this.add.sprite(this.boundary.left + 30, y, "cyborg_idle", 0).setScale(1.2);
-    this.physics.add.existing(unit);
-    this.safePlay(unit, "c_run");
-  } else {
-    unit = this.add.sprite(this.boundary.left + 30, y, "idle1").setScale(0.8);
-    this.physics.add.existing(unit);
-    this.safePlay(unit, "p_run");
-  }
-
-  // Players face right
-  unit.setFlipX(false);
-
-  // Physics
-  unit.body.setCollideWorldBounds(true).setBounce(0).setImmovable(false);
-  unit.body.onWorldBounds = true;
-
-  // Stats
-  unit.side = "player";
-  unit.type = type;
-  unit.hp = hp;
-  unit.maxHp = hp;
-  unit.attack = atk;
-  unit.speed = speed;
-  unit.fighting = false;
-  unit.attackingBase = false;
-  unit.healthBar = this.add.graphics();
-  this.updateHealthBar(unit);
-  this.players.add(unit);
-
-  // ✅ Cyborg ranged attack logic
-  if (type === "cyborg") {
-    unit.shootTimer = this.time.addEvent({
-      delay: 1400,
-      loop: true,
-      callback: () => {
-        if (!unit.active) return;
-        const target = this.findPriorityEnemyFor(unit);
-        if (!target) return;
-
-        // Fire projectile
-        const projectile = this.add.circle(unit.x, unit.y, 5, 0x00ff00);
-        this.physics.add.existing(projectile);
-        projectile.attack = unit.attack * 2; // 🔥 stronger damage
-        this.projectiles.add(projectile);
-
-        this.physics.moveToObject(projectile, target, 300);
-
-        this.time.delayedCall(2200, () => projectile.destroy());
-        this.safePlay(unit, "c_attack");
-      },
-    });
-  }
-
-  // Adjust collision box
-  unit.body.setSize(unit.width * 0.35, unit.height * 0.75);
-  unit.body.setOffset(unit.width * 0.32, unit.height * 0.25);
-
-  return unit;
-}
 
 
   createPlayerFirewall(durationMs = 5000) {
@@ -539,50 +603,50 @@ spawnPlayer(y, type) {
     });
   }
 
-spawnEnemy(y, type) {
-  let hp = 12, atk = 2, speed = 120;
-  if (type === "medium") { hp = 18; atk = 3; speed = 100; }
-  if (type === "strong") { hp = 24; atk = 4; speed = 80; }
+  spawnEnemy(y, type) {
+    let hp = 12, atk = 2, speed = 120;
+    if (type === "medium") { hp = 18; atk = 3; speed = 100; }
+    if (type === "strong") { hp = 24; atk = 4; speed = 80; }
 
-  let unit;
+    let unit;
 
-  if (type === "weak") {
-    // === Weak enemy (knight-style) ===
-    unit = this.add.sprite(this.boundary.right - 30, y, "e_idle").setScale(0.1);
-    this.physics.add.existing(unit);
-    this.safePlay(unit, "e_run");
-    unit.setFlipX(true);
-  } else {
-    // === Medium / Strong enemy (robot-style) ===
-    unit = this.add.sprite(this.boundary.right - 30, y, "robot_idle", 0).setScale(0.9);
-    this.physics.add.existing(unit);
-    this.safePlay(unit, "r_walk");
-    unit.setFlipX(true);
+    if (type === "weak") {
+      // === Weak enemy (knight-style) ===
+      unit = this.add.sprite(this.boundary.right - 30, y, "e_idle").setScale(0.1);
+      this.physics.add.existing(unit);
+      this.safePlay(unit, "e_run");
+      unit.setFlipX(true);
+    } else {
+      // === Medium / Strong enemy (robot-style) ===
+      unit = this.add.sprite(this.boundary.right - 30, y, "robot_idle", 0).setScale(0.9);
+      this.physics.add.existing(unit);
+      this.safePlay(unit, "r_walk");
+      unit.setFlipX(true);
+    }
+
+    // Physics
+    unit.body.setCollideWorldBounds(true).setBounce(0).setImmovable(false);
+    unit.body.onWorldBounds = true;
+
+    // Stats
+    unit.side = "enemy";
+    unit.type = type;
+    unit.hp = hp;
+    unit.maxHp = hp;
+    unit.attack = atk;
+    unit.speed = speed;
+    unit.fighting = false;
+    unit.attackingBase = false;
+
+    // Health bar
+    unit.healthBar = this.add.graphics();
+    this.updateHealthBar(unit);
+    this.enemies.add(unit);
+
+    // ✅ Adjust hitbox
+    unit.body.setSize(unit.width * 0.35, unit.height * 0.75);
+    unit.body.setOffset(unit.width * 0.32, unit.height * 0.25);
   }
-
-  // Physics
-  unit.body.setCollideWorldBounds(true).setBounce(0).setImmovable(false);
-  unit.body.onWorldBounds = true;
-
-  // Stats
-  unit.side = "enemy";
-  unit.type = type;
-  unit.hp = hp;
-  unit.maxHp = hp;
-  unit.attack = atk;
-  unit.speed = speed;
-  unit.fighting = false;
-  unit.attackingBase = false;
-
-  // Health bar
-  unit.healthBar = this.add.graphics();
-  this.updateHealthBar(unit);
-  this.enemies.add(unit);
-
-  // ✅ Adjust hitbox
-  unit.body.setSize(unit.width * 0.35, unit.height * 0.75);
-  unit.body.setOffset(unit.width * 0.32, unit.height * 0.25);
-}
 
 
 
@@ -699,7 +763,7 @@ spawnEnemy(y, type) {
     if (!enemies.length) return null;
     return enemies.reduce((a, b) =>
       Phaser.Math.Distance.Between(playerUnit.x, playerUnit.y, a.x, a.y) <
-      Phaser.Math.Distance.Between(playerUnit.x, playerUnit.y, b.x, b.y) ? a : b
+        Phaser.Math.Distance.Between(playerUnit.x, playerUnit.y, b.x, b.y) ? a : b
     );
   }
 
@@ -708,7 +772,7 @@ spawnEnemy(y, type) {
     if (!players.length) return null;
     return players.reduce((a, b) =>
       Phaser.Math.Distance.Between(enemyUnit.x, enemyUnit.y, a.x, a.y) <
-      Phaser.Math.Distance.Between(enemyUnit.x, enemyUnit.y, b.x, b.y) ? a : b
+        Phaser.Math.Distance.Between(enemyUnit.x, enemyUnit.y, b.x, b.y) ? a : b
     );
   }
 
@@ -859,8 +923,8 @@ export default function Game() {
 
       const config = {
         type: Phaser.AUTO,
-        width: 800,
-        height: 600,
+        width: 1000,
+        height: 700,
         backgroundColor: "#111133",
         physics: {
           default: "arcade",
@@ -884,27 +948,70 @@ export default function Game() {
   const durations = [20, 40, 60, 120];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4">
-      <div
-        id="phaser-container"
-        className="relative w-full max-w-4xl rounded-lg shadow-lg overflow-hidden border-4 border-cyan-400"
-        style={{ width: "800px", height: "600px" }}
-      >
-        {!isGameRunning && !gameMessage && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center z-10 bg-black bg-opacity-70">
-            <div className="text-center p-4">
-              <h1 className="text-5xl md:text-6xl font-bold mb-8 text-cyan-400">BrawlBots</h1>
-              <p className="text-lg md:text-xl mb-8">Defend the Job from the AI onslaught!</p>
-            </div>
+    <div className="game-container">
+      <div id="phaser-container" className="phaser-container" >
+{!isGameRunning && !gameMessage && (
+  <div className="game-overlay start-screen">
+    <div className="overlay-content text-center">
+      {/* Title */}
+      <h1 className="game-title">
+        ⚔️ Humans vs AI 🤖
+      </h1>
+
+      {/* Hook */}
+      <p className="game-subtitle glow-text">
+        The AI wants to steal your job… <br />
+        Will YOU rise as the defender? 🚀
+      </p>
+
+      {/* How to Play */}
+      <div className="game-howto neon-box">
+        <p>👨‍💻 <strong>Click</strong> inside arena to deploy Engineers</p>
+        <p>💰 <strong>Collect</strong> coins to build your army</p>
+        <p>📜 <strong>Certificates</strong> wipe out nearby AI bots</p>
+        <p>🏢 <strong>Destroy</strong> the AI Core before time runs out!</p>
+      </div>
+
+      {/* Info Section */}
+      <details className="info-panel">
+        <summary>ℹ️ Meet Your Heroes</summary>
+        <div className="hero-cards">
+          <div className="hero-card">
+            <span className="hero-emoji">🗡️</span>
+            <h3>Fullstack Dev</h3>
+            <p>Melee fighter with close-range attacks.</p>
           </div>
-        )}
+          <div className="hero-card">
+            <span className="hero-emoji">🛡️</span>
+            <h3>Cybersec Expert</h3>
+            <p>Builds firewalls to protect jobs & data.</p>
+          </div>
+          <div className="hero-card">
+            <span className="hero-emoji">🤖</span>
+            <h3>Cyborg</h3>
+            <p>Turns AI’s own power against its bots.</p>
+          </div>
+        </div>
+      </details>
+
+      {/* Start Button */}
+      <button
+        onClick={startGame}
+        className="game-button start-button glow"
+      >
+        🎮 Enter the Battle
+      </button>
+    </div>
+  </div>
+)}
+
         {gameMessage && (
-          <div className="absolute inset-0 flex items-center justify-center z-10">
-            <div className="bg-black bg-opacity-80 p-10 rounded-xl shadow-2xl text-center animate-pulse">
-              <h2 className="text-5xl md:text-6xl font-extrabold mb-6 text-yellow-400 drop-shadow-lg">{gameMessage}</h2>
+          <div className="game-overlay end-screen">
+            <div className="overlay-content game-message-box">
+              <h2 className="game-end-message">{gameMessage}</h2>
               <button
                 onClick={quitGame}
-                className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 transform hover:scale-105 shadow-xl"
+                className="game-button play-again-button"
               >
                 Play Again
               </button>
@@ -912,32 +1019,23 @@ export default function Game() {
           </div>
         )}
       </div>
-      <div className="mt-8 flex flex-col items-center space-y-4">
-        <div className="flex space-x-2">
+      <div className="game-controls">
+        <div className="duration-buttons">
           {durations.map((d) => (
             <button
               key={d}
               onClick={() => setGameDuration(d)}
-              className={`py-2 px-4 rounded-full font-bold transition-colors duration-200 ${
-                gameDuration === d ? "bg-blue-600 text-white shadow-md" : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              }`}
-              disabled={isGameRunning}
+              className={`game-button duration-button ${gameDuration === d ? "active" : ""}`}
             >
               {d}s
             </button>
           ))}
         </div>
-        {!isGameRunning ? (
-          <button
-            onClick={startGame}
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
-          >
-            Start Game
-          </button>
-        ) : (
+
+        {isGameRunning && (
           <button
             onClick={quitGame}
-            className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg"
+            className="game-button quit-button"
           >
             Quit
           </button>
