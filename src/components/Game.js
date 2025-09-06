@@ -11,10 +11,56 @@ class BattleScene extends Phaser.Scene {
 
   preload() {
     // ===== PLAYER (knight) — individual frames =====
-    for (let i = 1; i <= 10; i++) this.load.image(`idle${i}`, `game_asset/png/Idle_${i}.png`);
-    for (let i = 1; i <= 8; i++) this.load.image(`run${i}`, `game_asset/png/Run_${i}.png`);
-    for (let i = 1; i <= 8; i++) this.load.image(`attack${i}`, `game_asset/png/Melee_${i}.png`);
-    for (let i = 1; i <= 10; i++) this.load.image(`dead${i}`, `game_asset/png/Dead_${i}.png`);
+// ===== FULLSTACK PLAYER (Biker) — sprite sheets =====
+this.load.spritesheet("fs_idle", "game_asset/fullstack_player/Biker_idle.png", {
+  frameWidth: 48,   // adjust based on actual sheet
+  frameHeight: 48,
+});
+this.load.spritesheet("fs_run", "game_asset/fullstack_player/Biker_run.png", {
+  frameWidth: 48,   // adjust based on actual sheet
+  frameHeight: 48,
+});
+this.load.spritesheet("fs_attack", "game_asset/fullstack_player/Biker_attack3.png", {
+  frameWidth: 48,   // adjust based on actual sheet
+  frameHeight: 48,
+});
+this.load.spritesheet("fs_death", "game_asset/fullstack_player/Biker_death.png", {
+  frameWidth: 48,   // adjust based on actual sheet
+  frameHeight: 48,
+});
+this.load.spritesheet("fs_hurt", "game_asset/fullstack_player/Biker_hurt.png", {
+  frameWidth: 48,   // adjust based on actual sheet
+  frameHeight: 48,
+});
+
+// ===== PLAYER CYBORG (ranged strongest) =====
+this.load.spritesheet("cyborg_idle", "game_asset/cyborg/Cyborg_idle.png", {
+  frameWidth: 48,
+  frameHeight: 48,
+});
+this.load.spritesheet("cyborg_run", "game_asset/cyborg/Cyborg_run.png", {
+  frameWidth: 48,
+  frameHeight: 48,
+});
+this.load.spritesheet("cyborg_attack", "game_asset/cyborg/Cyborg_attack3.png", {
+  frameWidth: 48,
+  frameHeight: 48,
+});
+this.load.spritesheet("cyborg_death", "game_asset/cyborg/Cyborg_death.png", {
+  frameWidth: 48,
+  frameHeight: 48,
+});
+this.load.spritesheet("cyborg_hurt", "game_asset/cyborg/Cyborg_hurt.png", {
+  frameWidth: 48,
+  frameHeight: 48,
+});
+
+
+
+for (let i = 1; i <= 10; i++) this.load.image(`e_idle${i}`, `game_asset/png/Idle_${i}.png`);
+for (let i = 1; i <= 8; i++) this.load.image(`e_run${i}`, `game_asset/png/Run_${i}.png`);
+for (let i = 1; i <= 8; i++) this.load.image(`e_attack${i}`, `game_asset/png/Melee_${i}.png`);
+for (let i = 1; i <= 10; i++) this.load.image(`e_dead${i}`, `game_asset/png/Dead_${i}.png`);
 
     // ===== ENEMY (robot) — sprite sheets =====
     this.load.spritesheet("robot_idle", "game_asset/robot_melee/Idle.png", {
@@ -46,21 +92,44 @@ class BattleScene extends Phaser.Scene {
   }
 
   // map "idle/run/attack/dead" => side-specific anim keys
-  animKey(unit, action) {
-    const side = unit?.side === "enemy" ? "r" : "p";
-    if (side === "p") {
-      if (action === "idle") return "p_idle";
-      if (action === "run") return "p_run";
-      if (action === "attack") return "p_attack";
-      if (action === "dead") return "p_dead";
+// map "idle/run/attack/dead" => side+type-specific anim keys
+animKey(unit, action) {
+  if (!unit) return null;
+
+    // Fullstack player (biker)
+    if (unit.type === "fullstack") {
+      if (action === "idle") return "fs_idle";
+      if (action === "run") return "fs_run";
+      if (action === "attack") return "fs_attack";
+      if (action === "dead") return "fs_dead";}
+
+    if (unit.type === "cyborg") {
+      if (action === "idle") return "c_idle";
+      if (action === "run") return "c_run";
+      if (action === "attack") return "c_attack";
+      if (action === "dead") return "c_dead";
+    }
+
+      
+  // ENEMIES
+  if (unit.side === "enemy") {
+    if (unit.type === "weak") {
+      // weak = knight-style
+      if (action === "idle") return "e_idle";
+      if (action === "run") return "e_run";
+      if (action === "attack") return "e_attack";
+      if (action === "dead") return "e_dead";
     } else {
+      // medium/strong = robot-style
       if (action === "idle") return "r_idle";
       if (action === "run") return "r_walk";
       if (action === "attack") return "r_attack";
       if (action === "dead") return "r_dead";
     }
-    return null;
   }
+
+  return null;
+}
 
   firstFrameKeyFor(key) {
     // Only used if an animation is missing; give a safe still-frame fallback
@@ -108,34 +177,102 @@ class BattleScene extends Phaser.Scene {
   }
 
   create() {
+
+
+    //enemyknights for weak
+
+    this.anims.create({
+  key: "e_idle",
+  frames: Array.from({ length: 10 }, (_, i) => ({ key: `e_idle${i + 1}` })),
+  frameRate: 6,
+  repeat: -1,
+});
+this.anims.create({
+  key: "e_run",
+  frames: Array.from({ length: 8 }, (_, i) => ({ key: `e_run${i + 1}` })),
+  frameRate: 10,
+  repeat: -1,
+});
+this.anims.create({
+  key: "e_attack",
+  frames: Array.from({ length: 8 }, (_, i) => ({ key: `e_attack${i + 1}` })),
+  frameRate: 12,
+  repeat: 0,
+});
+this.anims.create({
+  key: "e_dead",
+  frames: Array.from({ length: 10 }, (_, i) => ({ key: `e_dead${i + 1}` })),
+  frameRate: 10,
+  repeat: 0,
+});
+
     // Verify knight frames loaded
     this.verifyAssets();
 
-    // ===== PLAYER ANIMS (built from individual images) =====
-    this.anims.create({
-      key: "p_idle",
-      frames: Array.from({ length: 10 }, (_, i) => ({ key: `idle${i + 1}` })),
-      frameRate: 6,
-      repeat: -1,
-    });
-    this.anims.create({
-      key: "p_run",
-      frames: Array.from({ length: 8 }, (_, i) => ({ key: `run${i + 1}` })),
-      frameRate: 10,
-      repeat: -1,
-    });
-    this.anims.create({
-      key: "p_attack",
-      frames: Array.from({ length: 8 }, (_, i) => ({ key: `attack${i + 1}` })),
-      frameRate: 12,
-      repeat: 0,
-    });
-    this.anims.create({
-      key: "p_dead",
-      frames: Array.from({ length: 10 }, (_, i) => ({ key: `dead${i + 1}` })),
-      frameRate: 10,
-      repeat: 0,
-    });
+   // ===== FULLSTACK PLAYER ANIMS =====
+this.anims.create({
+  key: "fs_idle",
+  frames: this.anims.generateFrameNumbers("fs_idle", { start: 0, end: 3 }),
+  frameRate: 6,
+  repeat: -1,
+});
+this.anims.create({
+  key: "fs_run",
+  frames: this.anims.generateFrameNumbers("fs_run", { start: 0, end: 5 }),
+  frameRate: 10,
+  repeat: -1,
+});
+this.anims.create({
+  key: "fs_attack",
+  frames: this.anims.generateFrameNumbers("fs_attack", { start: 0, end: 5 }),
+  frameRate: 12,
+  repeat: 0,
+});
+this.anims.create({
+  key: "fs_dead",
+  frames: this.anims.generateFrameNumbers("fs_death", { start: 0, end: 5 }),
+  frameRate: 10,
+  repeat: 0,
+});
+this.anims.create({
+  key: "fs_hurt",
+  frames: this.anims.generateFrameNumbers("fs_hurt", { start: 0, end: 1 }),
+  frameRate: 8,
+  repeat: 0,
+});
+
+// ===== CYBORG ANIMS =====
+this.anims.create({
+  key: "c_idle",
+  frames: this.anims.generateFrameNumbers("cyborg_idle", { start: 0, end: 3 }),
+  frameRate: 6,
+  repeat: -1,
+});
+this.anims.create({
+  key: "c_run",
+  frames: this.anims.generateFrameNumbers("cyborg_run", { start: 0, end: 5 }),
+  frameRate: 10,
+  repeat: -1,
+});
+this.anims.create({
+  key: "c_attack",
+  frames: this.anims.generateFrameNumbers("cyborg_attack", { start: 0, end: 6 }),
+  frameRate: 12,
+  repeat: 0,
+});
+this.anims.create({
+  key: "c_dead",
+  frames: this.anims.generateFrameNumbers("cyborg_death", { start: 0, end: 5 }),
+  frameRate: 10,
+  repeat: 0,
+});
+this.anims.create({
+  key: "c_hurt",
+  frames: this.anims.generateFrameNumbers("cyborg_hurt", { start: 0, end: 1 }),
+  frameRate: 8,
+  repeat: 0,
+});
+
 
     // ===== ROBOT ANIMS (from sheets) =====
     this.anims.create({
@@ -245,15 +382,24 @@ class BattleScene extends Phaser.Scene {
     });
 
     // Enemy spawns
-    this.time.delayedCall(500, () => {
-      this.time.addEvent({
-        delay: 1500,
-        loop: true,
-        callback: () => this.spawnEnemy(),
-      });
-    });
-  }
+this.time.delayedCall(500, () => {
+  this.time.addEvent({
+    delay: 1500,
+    loop: true,
+    callback: () => {
+      // Pick a random enemy type
+      const enemyTypes = ["weak", "medium", "strong"];
+      const type = Phaser.Utils.Array.GetRandom(enemyTypes);
 
+      // Pick a random y inside the battlefield
+      const y = Phaser.Math.Between(this.boundary.top + 40, this.boundary.bottom - 40);
+
+      this.spawnEnemy(y, type);
+    },
+  });
+});
+
+  }
   createBackground() {
     const g = this.add.graphics();
     g.lineStyle(1, 0x222222);
@@ -271,7 +417,7 @@ class BattleScene extends Phaser.Scene {
     const avatars = [
       { type: "fullstack", label: "Fullstack (5c)", x: 150 },
       { type: "cybersec", label: "CyberSec (15c)", x: 350 },
-      { type: "aiml", label: "AI/ML (30c)", x: 550 },
+      { type: "cyborg", label: "AI/ML (5c)", x: 550 },
     ];
     this.avatarButtons = [];
     avatars.forEach((a) => {
@@ -306,46 +452,78 @@ class BattleScene extends Phaser.Scene {
     this.spawnPlayer(Phaser.Math.Clamp(y, this.boundary.top + 40, this.boundary.bottom - 40), this.spawnType);
   }
 
-  spawnPlayer(y, type) {
-    let hp = 12, atk = 2, speed = 140;
-    if (type === "cybersec") { hp = 18; atk = 3; speed = 120; }
-    if (type === "aiml") { hp = 14; atk = 2; speed = 150; }
+spawnPlayer(y, type) {
+  let hp = 12, atk = 2, speed = 140;
+  let unit;
 
-    const unit = this.add.sprite(this.boundary.left + 30, y, "idle1").setScale(0.1);
-    this.physics.add.existing(unit);
-    unit.setFlipX(true);
-
-    this.safePlay(unit, "p_run");
-
-    unit.body.setCollideWorldBounds(true).setBounce(0).setImmovable(false);
-    unit.body.onWorldBounds = true;
-
-    unit.side = "player"; unit.type = type;
-    unit.hp = hp; unit.maxHp = hp; unit.attack = atk; unit.speed = speed;
-    unit.fighting = false; unit.attackingBase = false;
-    unit.healthBar = this.add.graphics();
-    this.updateHealthBar(unit);
-    this.players.add(unit);
-
-    if (type === "cybersec") this.createPlayerFirewall(5000);
-    if (type === "aiml") {
-      unit.aiPulseTimer = this.time.addEvent({
-        delay: 1600,
-        loop: true,
-        callback: () => {
-          if (!unit.active) return;
-          const target = this.findPriorityEnemyFor(unit);
-          if (!target) return;
-          const pulse = this.add.circle(unit.x, unit.y, 6, 0x00ffff);
-          this.physics.add.existing(pulse);
-          pulse.attack = 6;
-          this.projectiles.add(pulse);
-          this.physics.moveToObject(pulse, target, 300);
-          this.time.delayedCall(2200, () => pulse.destroy());
-        },
-      });
-    }
+  if (type === "cybersec") {
+    hp = 18; atk = 3; speed = 120;
   }
+  if (type === "cyborg") {
+    hp = 26; atk = 5; speed = 100; // 🔥 strongest
+  }
+
+  if (type === "cyborg") {
+    unit = this.add.sprite(this.boundary.left + 30, y, "cyborg_idle", 0).setScale(1.2);
+    this.physics.add.existing(unit);
+    this.safePlay(unit, "c_run");
+  } else {
+    unit = this.add.sprite(this.boundary.left + 30, y, "idle1").setScale(0.8);
+    this.physics.add.existing(unit);
+    this.safePlay(unit, "p_run");
+  }
+
+  // Players face right
+  unit.setFlipX(false);
+
+  // Physics
+  unit.body.setCollideWorldBounds(true).setBounce(0).setImmovable(false);
+  unit.body.onWorldBounds = true;
+
+  // Stats
+  unit.side = "player";
+  unit.type = type;
+  unit.hp = hp;
+  unit.maxHp = hp;
+  unit.attack = atk;
+  unit.speed = speed;
+  unit.fighting = false;
+  unit.attackingBase = false;
+  unit.healthBar = this.add.graphics();
+  this.updateHealthBar(unit);
+  this.players.add(unit);
+
+  // ✅ Cyborg ranged attack logic
+  if (type === "cyborg") {
+    unit.shootTimer = this.time.addEvent({
+      delay: 1400,
+      loop: true,
+      callback: () => {
+        if (!unit.active) return;
+        const target = this.findPriorityEnemyFor(unit);
+        if (!target) return;
+
+        // Fire projectile
+        const projectile = this.add.circle(unit.x, unit.y, 5, 0x00ff00);
+        this.physics.add.existing(projectile);
+        projectile.attack = unit.attack * 2; // 🔥 stronger damage
+        this.projectiles.add(projectile);
+
+        this.physics.moveToObject(projectile, target, 300);
+
+        this.time.delayedCall(2200, () => projectile.destroy());
+        this.safePlay(unit, "c_attack");
+      },
+    });
+  }
+
+  // Adjust collision box
+  unit.body.setSize(unit.width * 0.35, unit.height * 0.75);
+  unit.body.setOffset(unit.width * 0.32, unit.height * 0.25);
+
+  return unit;
+}
+
 
   createPlayerFirewall(durationMs = 5000) {
     if (this.playerBaseShieldTimer) this.playerBaseShieldTimer.remove(false);
@@ -361,53 +539,52 @@ class BattleScene extends Phaser.Scene {
     });
   }
 
-  spawnEnemy() {
-    const y = Phaser.Math.Between(this.boundary.top + 40, this.boundary.bottom - 40);
-    const roll = Phaser.Math.Between(1, 100);
-    let type = "weak";
-    if (roll > 70 && roll <= 90) type = "medium";
-    else if (roll > 90) type = "strong";
+spawnEnemy(y, type) {
+  let hp = 12, atk = 2, speed = 120;
+  if (type === "medium") { hp = 18; atk = 3; speed = 100; }
+  if (type === "strong") { hp = 24; atk = 4; speed = 80; }
 
-    let hp = 10, atk = 1, speed = 120;
-    if (type === "medium") { hp = 16; atk = 2; speed = 110; }
-    if (type === "strong") { hp = 20; atk = 3; speed = 130; }
+  let unit;
 
-    // start with a robot sheet texture; animation will swap immediately
-    const unit = this.add.sprite(this.boundary.right - 30, y, "robot_idle", 0).setScale(0.9);
+  if (type === "weak") {
+    // === Weak enemy (knight-style) ===
+    unit = this.add.sprite(this.boundary.right - 30, y, "e_idle").setScale(0.1);
     this.physics.add.existing(unit);
-
+    this.safePlay(unit, "e_run");
+    unit.setFlipX(true);
+  } else {
+    // === Medium / Strong enemy (robot-style) ===
+    unit = this.add.sprite(this.boundary.right - 30, y, "robot_idle", 0).setScale(0.9);
+    this.physics.add.existing(unit);
     this.safePlay(unit, "r_walk");
-
-    unit.body.setCollideWorldBounds(true).setBounce(0).setImmovable(false);
-    unit.body.onWorldBounds = true;
-
-    unit.side = "enemy"; unit.type = type;
-    unit.hp = hp; unit.maxHp = hp; unit.attack = atk; unit.speed = speed;
-    unit.fighting = false; unit.attackingBase = false;
-    unit.healthBar = this.add.graphics();
-    this.updateHealthBar(unit);
-    this.enemies.add(unit);
-
-    if (type === "strong") {
-      unit.aiPulseTimer = this.time.addEvent({
-        delay: 2000,
-        loop: true,
-        callback: () => {
-          if (!unit.active) return;
-          const target = this.findPriorityPlayerFor(unit);
-          if (!target) return;
-          const pulse = this.add.circle(unit.x, unit.y, 6, 0xff00ff);
-          this.physics.add.existing(pulse);
-          pulse.attack = 5;
-          this.projectiles.add(pulse);
-          this.physics.moveToObject(pulse, target, 250);
-          this.time.delayedCall(2200, () => pulse.destroy());
-        },
-      });
-    }
-
-    this.physics.moveToObject(unit, this.playerBase, unit.speed);
+    unit.setFlipX(true);
   }
+
+  // Physics
+  unit.body.setCollideWorldBounds(true).setBounce(0).setImmovable(false);
+  unit.body.onWorldBounds = true;
+
+  // Stats
+  unit.side = "enemy";
+  unit.type = type;
+  unit.hp = hp;
+  unit.maxHp = hp;
+  unit.attack = atk;
+  unit.speed = speed;
+  unit.fighting = false;
+  unit.attackingBase = false;
+
+  // Health bar
+  unit.healthBar = this.add.graphics();
+  this.updateHealthBar(unit);
+  this.enemies.add(unit);
+
+  // ✅ Adjust hitbox
+  unit.body.setSize(unit.width * 0.35, unit.height * 0.75);
+  unit.body.setOffset(unit.width * 0.32, unit.height * 0.25);
+}
+
+
 
   spawnDrop(x, y) {
     if (!this.boundary.contains(x, y)) return;
