@@ -1,5 +1,5 @@
 // projectcard.js
-function Projectcard({ title, description, link, technologies = [], image }) {
+function Projectcard({ title, description, link, technologies = [], imageUrl  }) {
   const isLive = Boolean(link);
 
   return (
