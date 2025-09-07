@@ -8,7 +8,7 @@ const ProjectList = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch('/api/projects');
+        const response = await fetch('/api/project');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
