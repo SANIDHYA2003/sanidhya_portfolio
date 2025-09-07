@@ -8,7 +8,7 @@ function Badges() {
   useEffect(() => {
     const fetchBadges = async () => {
       try {
-        const { data } = await axios.get("/api/badges");
+        const { data } = await axios.get("/api/badge");
         setBadges(data);
       } catch (error) {
         console.error("Error fetching badges:", error);
