@@ -55,7 +55,7 @@ const ProjectList = () => {
                 </div>
               )}
               {/* Using optional chaining to safely access nested properties */}
-              <img src={project.image || "/placeholder.svg"} alt={project.title} className="project-image" />
+              
               <div className="project-content">
                 <h3 className="project-title">{project.title}</h3>
                 <p className="project-description">{project.description}</p>
