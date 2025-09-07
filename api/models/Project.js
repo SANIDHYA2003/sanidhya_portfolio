@@ -6,6 +6,12 @@ const ProjectSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
+
+  //image
+    imageUrl: { 
+    type: String, 
+    
+  },
   // A brief description of the project.
   description: { 
     type: String, 
