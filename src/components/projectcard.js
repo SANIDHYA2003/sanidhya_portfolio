@@ -6,7 +6,7 @@ function Projectcard({ title, description, link, technologies = [], image }) {
     <div className="project-card">
       <div className="project-image-wrapper">
         {isLive && <span className="live-badge">LIVE</span>}
-        {image && <img src={image} alt={title} className="project-image" />}
+        {imageUrl && <img src={imageUrl} alt={title} className="project-image" />}
       </div>
 
       <h3 className="project-title">{title}</h3>
