@@ -5,7 +5,7 @@ function About() {
   const [cvUrl, setCvUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showPreview, setShowPreview] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     fetch("/api/cv")
@@ -23,10 +23,6 @@ function About() {
         setLoading(false);
       });
   }, []);
-
-  const handlePreviewClick = () => {
-    setShowPreview(true);
-  };
 
   const handleDownload = () => {
     const link = document.createElement("a");
@@ -77,48 +73,39 @@ function About() {
 
           {loading && <p>Loading CV…</p>}
           {error && <p className="error-text">{error}</p>}
-
-          {!loading && !error && !showPreview && (
+          {!loading && !error && (
             <button
-              className="preview-cv-button"
-              onClick={handlePreviewClick}
+              className="view-cv-button"
+              onClick={() => setShowModal(true)}
             >
-              View My CV
+              View / Download My CV
             </button>
-          )}
-
-          {showPreview && (
-            <div className="cv-preview-container">
-              <iframe
-                src={cvUrl}
-                title="CV Preview"
-                width="100%"
-                height="600px"
-                style={{
-                  border: "1px solid #ccc",
-                  marginTop: "20px",
-                  borderRadius: "8px",
-                }}
-              ></iframe>
-              <button
-                className="download-cv-button"
-                onClick={handleDownload}
-                style={{
-                  marginTop: "12px",
-                  padding: "10px 18px",
-                  backgroundColor: "#007bff",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                }}
-              >
-                Download CV
-              </button>
-            </div>
           )}
         </div>
       </div>
+
+      {showModal && (
+        <div className="cv-modal-overlay">
+          <div className="cv-modal-content">
+            <button
+              className="cv-modal-close"
+              onClick={() => setShowModal(false)}
+            >
+              &times;
+            </button>
+            <iframe
+              src={cvUrl}
+              title="CV Preview"
+              width="100%"
+              height="100%"
+              style={{ border: "none" }}
+            ></iframe>
+            <button className="cv-modal-download" onClick={handleDownload}>
+              Download CV
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
