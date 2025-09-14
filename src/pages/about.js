@@ -6,6 +6,7 @@ function About() {
   const [cvUrl, setCvUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     fetch("/api/cv")
@@ -24,10 +25,8 @@ function About() {
       });
   }, []);
 
-  const handleDownload = () => {
-    if (cvUrl) {
-      window.open(cvUrl, "_blank");
-    }
+  const handleShowPreview = () => {
+    setShowPreview(true);
   };
 
   return (
@@ -70,13 +69,41 @@ function About() {
 
           {loading && <p>Loading CV…</p>}
           {error && <p className="error-text">{error}</p>}
-          {!loading && !error && (
+          {!loading && !error && !showPreview && (
             <button
-              className="download-cv-button"
-              onClick={handleDownload}
+              className="preview-download-cv-button"
+              onClick={handleShowPreview}
             >
-              Download My CV
+              View / Download My CV
             </button>
+          )}
+
+          {showPreview && (
+            <div className="cv-preview">
+              <iframe
+                src={cvUrl}
+                title="CV Preview"
+                width="100%"
+                height="600px"
+                style={{ border: "1px solid #ccc", marginTop: "15px" }}
+              ></iframe>
+              <div style={{ marginTop: "10px" }}>
+                <a
+                  href={cvUrl}
+                  download
+                  className="download-cv-button"
+                  style={{
+                    padding: "8px 14px",
+                    backgroundColor: "#007bff",
+                    color: "#fff",
+                    borderRadius: "4px",
+                    textDecoration: "none",
+                  }}
+                >
+                  Download CV
+                </a>
+              </div>
+            </div>
           )}
         </div>
       </div>
