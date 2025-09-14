@@ -1,10 +1,11 @@
-// src/pages/About.js
 import React, { useEffect, useState } from "react";
 import ProfileCard from "../components/profilecard";
 
-
 function About() {
   const [cvUrl, setCvUrl] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     fetch("/api/cv")
@@ -14,19 +15,26 @@ function About() {
       })
       .then((data) => {
         setCvUrl(data.cvUrl);
-       
+        setLoading(false);
       })
       .catch((err) => {
         console.error("Error fetching CV:", err);
-        
-        
+        setError("Could not load CV");
+        setLoading(false);
       });
   }, []);
 
+  const handlePreviewClick = () => {
+    setShowPreview(true);
+  };
+
   const handleDownload = () => {
-    if (cvUrl) {
-      window.open(cvUrl, "_blank");
-    }
+    const link = document.createElement("a");
+    link.href = cvUrl;
+    link.download = "Sanidhya_Sharma_CV.pdf";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -67,14 +75,48 @@ function About() {
             <div className="skill-item">MongoDB</div>
           </div>
 
-        
+          {loading && <p>Loading CV…</p>}
+          {error && <p className="error-text">{error}</p>}
+
+          {!loading && !error && !showPreview && (
             <button
-              className="download-cv-button"
-              onClick={handleDownload}
+              className="preview-cv-button"
+              onClick={handlePreviewClick}
             >
-              Download My CV
+              View My CV
             </button>
-        
+          )}
+
+          {showPreview && (
+            <div className="cv-preview-container">
+              <iframe
+                src={cvUrl}
+                title="CV Preview"
+                width="100%"
+                height="600px"
+                style={{
+                  border: "1px solid #ccc",
+                  marginTop: "20px",
+                  borderRadius: "8px",
+                }}
+              ></iframe>
+              <button
+                className="download-cv-button"
+                onClick={handleDownload}
+                style={{
+                  marginTop: "12px",
+                  padding: "10px 18px",
+                  backgroundColor: "#007bff",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                }}
+              >
+                Download CV
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
