@@ -84,28 +84,28 @@ function About() {
         </div>
       </div>
 
-      {showModal && (
-        <div className="cv-modal-overlay">
-          <div className="cv-modal-content">
-            <button
-              className="cv-modal-close"
-              onClick={() => setShowModal(false)}
-            >
-              &times;
-            </button>
-            <iframe
-              src={cvUrl}
-              title="CV Preview"
-              width="100%"
-              height="100%"
-              style={{ border: "none" }}
-            ></iframe>
-            <button className="cv-modal-download" onClick={handleDownload}>
-              Download CV
-            </button>
-          </div>
-        </div>
-      )}
+{showModal && (
+  <div className="cv-modal-overlay">
+    <div className="cv-modal-content">
+      <button
+        className="cv-modal-close"
+        onClick={() => setShowModal(false)}
+      >
+        &times;
+      </button>
+      <iframe
+        src={cvUrl}
+        title="CV Preview"
+        width="100%"
+        height="100%"
+        style={{ border: "none" }}
+      ></iframe>
+      <button className="cv-modal-download" onClick={handleDownload}>
+        Download CV
+      </button>
+    </div>
+  </div>
+)}
     </div>
   );
 }
