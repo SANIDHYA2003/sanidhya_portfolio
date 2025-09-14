@@ -920,6 +920,7 @@ body {
   background-color: #007bff;
   color: white;
   border: none;
+  margin-top: 21px;
   border-radius: 6px;
   font-size: 16px;
   cursor: pointer;
