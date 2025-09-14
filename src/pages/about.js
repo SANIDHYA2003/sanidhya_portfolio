@@ -2,11 +2,9 @@
 import React, { useEffect, useState } from "react";
 import ProfileCard from "../components/profilecard";
 
+
 function About() {
   const [cvUrl, setCvUrl] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     fetch("/api/cv")
@@ -16,17 +14,19 @@ function About() {
       })
       .then((data) => {
         setCvUrl(data.cvUrl);
-        setLoading(false);
+       
       })
       .catch((err) => {
         console.error("Error fetching CV:", err);
-        setError("Could not load CV");
-        setLoading(false);
+        
+        
       });
   }, []);
 
-  const handleShowPreview = () => {
-    setShowPreview(true);
+  const handleDownload = () => {
+    if (cvUrl) {
+      window.open(cvUrl, "_blank");
+    }
   };
 
   return (
@@ -67,44 +67,14 @@ function About() {
             <div className="skill-item">MongoDB</div>
           </div>
 
-          {loading && <p>Loading CV…</p>}
-          {error && <p className="error-text">{error}</p>}
-          {!loading && !error && !showPreview && (
+        
             <button
-              className="preview-download-cv-button"
-              onClick={handleShowPreview}
+              className="download-cv-button"
+              onClick={handleDownload}
             >
-              View / Download My CV
+              Download My CV
             </button>
-          )}
-
-          {showPreview && (
-            <div className="cv-preview">
-              <iframe
-                src={cvUrl}
-                title="CV Preview"
-                width="100%"
-                height="600px"
-                style={{ border: "1px solid #ccc", marginTop: "15px" }}
-              ></iframe>
-              <div style={{ marginTop: "10px" }}>
-                <a
-                  href={cvUrl}
-                  download
-                  className="download-cv-button"
-                  style={{
-                    padding: "8px 14px",
-                    backgroundColor: "#007bff",
-                    color: "#fff",
-                    borderRadius: "4px",
-                    textDecoration: "none",
-                  }}
-                >
-                  Download CV
-                </a>
-              </div>
-            </div>
-          )}
+        
         </div>
       </div>
     </div>
